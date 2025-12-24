@@ -120,7 +120,7 @@ const ProfilePage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef(null);
-  
+
   // Sử dụng useRef thay vì useState để không gây re-render
   const hasInitialized = useRef(false);
 
@@ -137,7 +137,7 @@ const ProfilePage = () => {
           setProfileError("Không thể tải thông tin người dùng. Vui lòng thử lại sau.");
         }
       };
-      
+
       fetchData();
       hasInitialized.current = true;
     }
@@ -147,16 +147,17 @@ const ProfilePage = () => {
   useEffect(() => {
     if (user) {
       console.log("User data received:", user);
+      const profile = user.profile || {};
       setUserProfile({
-        name: user.profile?.full_name || user.username || "",
+        name: profile.full_name || profile.fullName || user.username || "",
         email: user.email || "",
-        phone: user.profile?.phone_number || "",
-        birthdate: user.profile?.birth_date || "",
-        address: user.profile?.city && user.profile?.country ? 
-          `${user.profile.city}, ${user.profile.country}` : 
-          (user.profile?.country || ""),
-        bio: user.profile?.bio || "",
-        avatar: user.profile?.avatar_url || ""
+        phone: profile.phone_number || profile.phoneNumber || "",
+        birthdate: profile.birth_date || profile.birthDate || "",
+        address: profile.city && profile.country ?
+          `${profile.city}, ${profile.country}` :
+          (profile.country || profile.address || ""),
+        bio: profile.bio || "",
+        avatar: profile.avatar_url || profile.avatarUrl || ""
       });
     }
   }, [user]);
@@ -164,24 +165,24 @@ const ProfilePage = () => {
   // Recent readings - trong thực tế sẽ lấy từ API
   const recentReadings = [
     {
-      id: 1, 
-      date: "2023-03-15", 
-      reading: "Tarot Tình Yêu", 
-      image: "https://api-prod-minimal-v510.vercel.app/assets/images/travel/travel_1.jpg",
+      id: 1,
+      date: "2023-03-15",
+      reading: "Tarot Tình Yêu",
+      image: "https://placehold.co/100x100/9370db/white?text=Love",
       result: "Tích cực"
     },
     {
-      id: 2, 
-      date: "2023-03-10", 
-      reading: "Tarot Sự Nghiệp", 
-      image: "https://api-prod-minimal-v510.vercel.app/assets/images/travel/travel_2.jpg",
+      id: 2,
+      date: "2023-03-10",
+      reading: "Tarot Sự Nghiệp",
+      image: "https://placehold.co/100x100/9370db/white?text=Career",
       result: "Cân nhắc"
     },
     {
-      id: 3, 
-      date: "2023-03-05", 
-      reading: "Tarot Hàng Ngày", 
-      image: "https://api-prod-minimal-v510.vercel.app/assets/images/travel/travel_3.jpg",
+      id: 3,
+      date: "2023-03-05",
+      reading: "Tarot Hàng Ngày",
+      image: "https://placehold.co/100x100/9370db/white?text=Daily",
       result: "Cần cẩn trọng"
     }
   ];
@@ -244,26 +245,26 @@ const ProfilePage = () => {
       setIsUploading(true);
       setUploadProgress(0);
       setProfileError(null);
-      
+
       // Log file info
       console.log('File selected:', file.name, file.type, file.size);
-      
+
       // Tạo URL ảnh giả để test trước
       // Thêm ảnh tạm thời từ file đã chọn
       const tempImageUrl = URL.createObjectURL(file);
-      
+
       // Cập nhật state với URL tạm thời
       setUserProfile({
         ...userProfile,
         avatar: tempImageUrl
       });
-      
+
       setProfileError("Đã tải lên ảnh tạm thời. Chức năng upload sẽ được hoàn thiện trong phiên bản tiếp theo.");
       setIsUploading(false);
-      
+
       // Thông báo cho người dùng
       console.log('Using temporary local file URL instead of uploading to Cloudinary');
-      
+
       /* Chức năng upload sẽ được cập nhật sau khi cấu hình Cloudinary được hoàn tất
       // Tạo form data để upload lên Cloudinary
       const formData = new FormData();
@@ -294,7 +295,7 @@ const ProfilePage = () => {
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
-    
+
     // Chuyển đổi định dạng ngày tháng thành YYYY-MM-DD cho input type="date"
     try {
       const date = new Date(dateString);
@@ -307,7 +308,7 @@ const ProfilePage = () => {
   const handleSaveProfile = async () => {
     try {
       console.log("Saving profile:", userProfile);
-      
+
       // Chuyển đổi dữ liệu để phù hợp với API
       const profileData = {
         fullName: userProfile.name,
@@ -316,32 +317,32 @@ const ProfilePage = () => {
         birthDate: userProfile.birthdate,
         avatarUrl: userProfile.avatar,
         // Phân tách địa chỉ thành city và country nếu có dấu phẩy
-        ...(userProfile.address && userProfile.address.includes(',') 
+        ...(userProfile.address && userProfile.address.includes(',')
           ? {
-              city: userProfile.address.split(',')[0].trim(),
-              country: userProfile.address.split(',')[1].trim()
-            }
+            city: userProfile.address.split(',')[0].trim(),
+            country: userProfile.address.split(',')[1].trim()
+          }
           : { country: userProfile.address })
       };
-      
+
       console.log("Sending profile data to API:", profileData);
       console.log("Headers:", setAuthHeader());
-      
+
       // Gọi API cập nhật profile với axiosInstance
       const headers = setAuthHeader();
-      const response = await axiosInstance.put('/api/users/profile', profileData, { headers });
-      
+      const response = await axiosInstance.put('/users/profile', profileData, { headers });
+
       console.log("Profile update response:", response);
-      
+
       // Cập nhật lại dữ liệu người dùng
       dispatch(fetchCurrentUser());
-      
+
       // Tắt chế độ chỉnh sửa
       setIsEditing(false);
       setProfileError(null);
     } catch (error) {
       console.error("Error updating profile:", error);
-      
+
       // Hiển thị thông báo lỗi chi tiết từ server nếu có
       if (error.response) {
         // Server trả về lỗi với status code
@@ -375,7 +376,7 @@ const ProfilePage = () => {
   const retryButton = (
     <div className="bg-red-500/20 border border-red-500/30 p-4 rounded-lg text-white text-center">
       <p>{profileError}</p>
-      <button 
+      <button
         onClick={handleRetry}
         className="mt-4 bg-white/10 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/20 transition-colors tracking-vn-tight"
       >
@@ -390,20 +391,20 @@ const ProfilePage = () => {
         <title>Hồ Sơ Người Dùng | Bói Tarot</title>
         <meta name="description" content="Quản lý hồ sơ cá nhân và xem lại lịch sử các lần xem bói Tarot của bạn." />
       </Helmet>
-      
+
       <MysticBackground />
       <Navbar />
-      
+
       {/* Password Change Form */}
       <AnimatePresence>
         {showPasswordForm && (
-          <PasswordChangeForm 
-            onClose={() => setShowPasswordForm(false)} 
+          <PasswordChangeForm
+            onClose={() => setShowPasswordForm(false)}
             onSuccess={handlePasswordSuccess}
           />
         )}
       </AnimatePresence>
-      
+
       {/* Profile Section */}
       <section className="relative pt-32 pb-16 px-4 md:px-8">
         <div className="container mx-auto max-w-5xl relative z-10">
@@ -418,20 +419,20 @@ const ProfilePage = () => {
               {/* Left Column - Profile Info */}
               <div className="w-full md:w-2/3 space-y-8">
                 <div className="flex items-center justify-between mb-6">
-                  <SectionTitle 
-                    title="Hồ Sơ Cá Nhân" 
+                  <SectionTitle
+                    title="Hồ Sơ Cá Nhân"
                     subtitle="Thông tin và cài đặt tài khoản của bạn"
                   />
-                  
+
                   {isEditing ? (
                     <div className="flex gap-3">
-                      <button 
+                      <button
                         onClick={handleSaveProfile}
                         className="bg-gradient-to-r from-[#9370db] to-[#8a2be2] text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow tracking-vn-tight"
                       >
                         Lưu
                       </button>
-                      <button 
+                      <button
                         onClick={() => setIsEditing(false)}
                         className="bg-white/10 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/20 transition-colors tracking-vn-tight"
                       >
@@ -439,7 +440,7 @@ const ProfilePage = () => {
                       </button>
                     </div>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => setIsEditing(true)}
                       className="bg-white/10 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/20 transition-colors tracking-vn-tight"
                     >
@@ -447,12 +448,12 @@ const ProfilePage = () => {
                     </button>
                   )}
                 </div>
-                
+
                 <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 p-6 rounded-xl">
                   {profileError && (
                     <div className="mb-6 bg-red-500/20 border border-red-500/30 p-4 rounded-lg text-white text-center">
                       <p>{profileError}</p>
-                      <button 
+                      <button
                         onClick={() => setProfileError(null)}
                         className="mt-2 bg-white/10 text-white px-3 py-1 text-sm rounded-lg font-medium hover:bg-white/20 transition-colors tracking-vn-tight"
                       >
@@ -464,25 +465,24 @@ const ProfilePage = () => {
                   <div className="flex items-center mb-6">
                     <div className="relative mr-6">
                       {/* File input hidden */}
-                      <input 
+                      <input
                         ref={fileInputRef}
-                        type="file" 
+                        type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={handleFileChange} 
+                        onChange={handleFileChange}
                       />
-                      
+
                       {/* Avatar display */}
-                      <div 
+                      <div
                         onClick={handleAvatarClick}
-                        className={`w-24 h-24 rounded-full ${isEditing ? 'cursor-pointer' : ''} overflow-hidden relative ${
-                          isEditing ? 'hover:opacity-80 transition-opacity' : ''
-                        }`}
+                        className={`w-24 h-24 rounded-full ${isEditing ? 'cursor-pointer' : ''} overflow-hidden relative ${isEditing ? 'hover:opacity-80 transition-opacity' : ''
+                          }`}
                       >
                         {userProfile.avatar ? (
-                          <img 
-                            src={userProfile.avatar} 
-                            alt={userProfile.name} 
+                          <img
+                            src={userProfile.avatar}
+                            alt={userProfile.name}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -490,7 +490,7 @@ const ProfilePage = () => {
                             <span className="text-white text-3xl font-medium">{userProfile.name.charAt(0).toUpperCase()}</span>
                           </div>
                         )}
-                        
+
                         {/* Upload progress */}
                         {isUploading && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -515,10 +515,10 @@ const ProfilePage = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Camera button for avatar upload in edit mode */}
                       {isEditing && (
-                        <button 
+                        <button
                           onClick={handleAvatarClick}
                           className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#9370db] flex items-center justify-center hover:bg-[#8a2be2] transition-colors"
                         >
@@ -534,34 +534,34 @@ const ProfilePage = () => {
                       <p className="text-gray-400 tracking-vn-tight">Thành viên từ {new Date().toLocaleDateString('vi-VN')}</p>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <ProfileInfoItem 
-                      label="Họ và tên" 
-                      value={userProfile.name} 
+                    <ProfileInfoItem
+                      label="Họ và tên"
+                      value={userProfile.name}
                       icon="👤"
                       isEditing={isEditing}
                       onChange={handleProfileChange}
                       name="name"
                     />
-                    <ProfileInfoItem 
-                      label="Email" 
-                      value={userProfile.email} 
+                    <ProfileInfoItem
+                      label="Email"
+                      value={userProfile.email}
                       icon="📧"
                       isEditing={isEditing}
                       onChange={handleProfileChange}
                       name="email"
                     />
-                    <ProfileInfoItem 
-                      label="Số điện thoại" 
-                      value={userProfile.phone} 
+                    <ProfileInfoItem
+                      label="Số điện thoại"
+                      value={userProfile.phone}
                       icon="📱"
                       isEditing={isEditing}
                       onChange={handleProfileChange}
                       name="phone"
                     />
-                    <ProfileInfoItem 
-                      label="Ngày sinh" 
+                    <ProfileInfoItem
+                      label="Ngày sinh"
                       icon="🎂"
                       isEditing={isEditing}
                       onChange={handleProfileChange}
@@ -570,16 +570,16 @@ const ProfilePage = () => {
                       // Nếu đang chỉnh sửa, hiển thị ngày theo định dạng YYYY-MM-DD cho input type="date"
                       value={isEditing ? formatDateForInput(userProfile.birthdate) : (userProfile.birthdate ? new Date(userProfile.birthdate).toLocaleDateString('vi-VN') : '')}
                     />
-                    <ProfileInfoItem 
-                      label="Địa chỉ" 
-                      value={userProfile.address} 
+                    <ProfileInfoItem
+                      label="Địa chỉ"
+                      value={userProfile.address}
                       icon="🏠"
                       isEditing={isEditing}
                       onChange={handleProfileChange}
                       name="address"
                     />
                   </div>
-                  
+
                   <div className="mt-6">
                     <label className="block text-[#9370db] mb-2 text-sm font-medium tracking-vn-tight flex items-center">
                       <span className="mr-2 text-[#9370db]">📝</span>
@@ -599,7 +599,7 @@ const ProfilePage = () => {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Account Security Section */}
                 <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 p-6 rounded-xl">
                   <h3 className="text-xl font-bold text-white tracking-vn-tight mb-4">Bảo mật tài khoản</h3>
@@ -609,7 +609,7 @@ const ProfilePage = () => {
                         <p className="text-white tracking-vn-tight">Đổi mật khẩu</p>
                         <p className="text-sm text-gray-400 tracking-vn-tight">Cập nhật mật khẩu để bảo vệ tài khoản</p>
                       </div>
-                      <button 
+                      <button
                         onClick={() => setShowPasswordForm(true)}
                         className="bg-white/10 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-white/20 transition-colors tracking-vn-tight text-sm"
                       >
@@ -618,7 +618,7 @@ const ProfilePage = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Recent Readings Section */}
                 <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 p-6 rounded-xl">
                   <div className="flex justify-between items-center mb-6">
@@ -627,10 +627,10 @@ const ProfilePage = () => {
                       Xem tất cả
                     </Link>
                   </div>
-                  
+
                   <div className="space-y-4">
                     {recentReadings.map(reading => (
-                      <TarotSessionItem 
+                      <TarotSessionItem
                         key={reading.id}
                         date={reading.date}
                         reading={reading.reading}
@@ -641,7 +641,7 @@ const ProfilePage = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Right Column - Stats & Achievements */}
               <div className="w-full md:w-1/3 space-y-8">
                 {/* Stats */}
@@ -666,12 +666,12 @@ const ProfilePage = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Membership */}
                 <div className="bg-gradient-to-r from-[#2a1045] to-[#3a1c5a] p-6 rounded-xl relative overflow-hidden">
                   <div className="absolute right-0 top-0 w-32 h-32 bg-[#9370db]/20 rounded-full filter blur-[30px]"></div>
                   <div className="absolute left-0 bottom-0 w-24 h-24 bg-[#8a2be2]/20 rounded-full filter blur-[20px]"></div>
-                  
+
                   <div className="relative z-10">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-xl font-bold text-white tracking-vn-tight">Hạng thành viên</h3>
@@ -679,7 +679,7 @@ const ProfilePage = () => {
                         <span className="text-xs text-[#9370db] tracking-vn-tight font-medium">Premium</span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <div className="flex items-center space-x-2 text-gray-300 text-sm tracking-vn-tight">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#9370db]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -700,19 +700,19 @@ const ProfilePage = () => {
                         <span>Tạo và lưu nhật ký hàng ngày</span>
                       </div>
                     </div>
-                    
+
                     <button className="mt-6 w-full bg-gradient-to-r from-[#9370db] to-[#8a2be2] text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow tracking-vn-tight text-center">
                       Nâng cấp lên Premium
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Achievements */}
                 <div>
                   <h3 className="text-xl font-bold text-white tracking-vn-tight mb-4">Thành tựu</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {badges.map((badge, index) => (
-                      <BadgeItem 
+                      <BadgeItem
                         key={index}
                         title={badge.title}
                         description={badge.description}
@@ -728,7 +728,7 @@ const ProfilePage = () => {
           )}
         </div>
       </section>
-      
+
       <Footer />
     </div>
   );

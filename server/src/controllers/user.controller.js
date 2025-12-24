@@ -97,18 +97,18 @@ exports.updateProfile = async (req, res, next) => {
       country,
       website
     };
-    
+
     // Chỉ cập nhật avatar nếu được cung cấp
     if (avatarUrl) {
       updateFields.avatar_url = avatarUrl;
     }
 
     // Cập nhật profile
-    const [updatedRows, [updatedProfile]] = await UserProfile.update(
+    // Cập nhật profile
+    const [updatedRows] = await UserProfile.update(
       updateFields,
       {
-        where: { user_id: userId },
-        returning: true
+        where: { user_id: userId }
       }
     );
 
@@ -118,6 +118,11 @@ exports.updateProfile = async (req, res, next) => {
         message: 'User profile not found'
       });
     }
+
+    // Fetch updated profile (MySQL specific fix)
+    const updatedProfile = await UserProfile.findOne({
+      where: { user_id: userId }
+    });
 
     res.status(200).json({
       status: 'success',

@@ -64,6 +64,11 @@ exports.register = async (req, res, next) => {
     // Generate token
     const token = generateToken(user.id);
 
+    // Get created profile to return
+    const userProfile = await UserProfile.findOne({
+      where: { user_id: user.id }
+    });
+
     // Return response without password
     const userData = {
       id: user.id,
@@ -72,7 +77,8 @@ exports.register = async (req, res, next) => {
       role: user.role,
       is_premium: user.is_premium,
       points: user.points,
-      created_at: user.created_at
+      created_at: user.created_at,
+      profile: userProfile
     };
 
     res.status(201).json({
@@ -114,6 +120,11 @@ exports.login = async (req, res, next) => {
     // Generate token
     const token = generateToken(user.id);
 
+    // Fetch user profile
+    const userProfile = await UserProfile.findOne({
+      where: { user_id: user.id }
+    });
+
     // Return response without password
     const userData = {
       id: user.id,
@@ -122,7 +133,8 @@ exports.login = async (req, res, next) => {
       role: user.role,
       is_premium: user.is_premium,
       points: user.points,
-      created_at: user.created_at
+      created_at: user.created_at,
+      profile: userProfile
     };
 
     res.status(200).json({
@@ -164,6 +176,11 @@ exports.adminLogin = async (req, res, next) => {
     // Generate token
     const token = generateToken(user.id);
 
+    // Fetch user profile
+    const userProfile = await UserProfile.findOne({
+      where: { user_id: user.id }
+    });
+
     // Return response without password
     const userData = {
       id: user.id,
@@ -172,7 +189,8 @@ exports.adminLogin = async (req, res, next) => {
       role: user.role,
       is_premium: user.is_premium,
       points: user.points,
-      created_at: user.created_at
+      created_at: user.created_at,
+      profile: userProfile
     };
 
     res.status(200).json({
@@ -217,7 +235,7 @@ exports.forgotPassword = async (req, res, next) => {
 
     // Send email
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-    
+
     await sendMail({
       to: user.email,
       subject: 'Password Reset Request',
@@ -370,7 +388,7 @@ exports.logout = (req, res) => {
     status: 'success',
     message: 'Logged out successfully'
   });
-}; 
+};
 
 // Change password
 exports.changePassword = async (req, res, next) => {
