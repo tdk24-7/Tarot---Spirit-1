@@ -1,0 +1,57 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "@cloudinary/react": "^1.14.1",
+    "@cloudinary/url-gen": "^1.21.0",
+    "@google/generative-ai": "^0.24.1",
+    "@greatsumini/react-facebook-login": "^3.4.0",
+    "@react-oauth/google": "^0.12.2",
+    "@reduxjs/toolkit": "^2.6.1",
+    "axios": "^1.8.3",
+    "date-fns": "^4.1.0",
+    "file-loader": "^6.2.0",
+    "framer-motion": "^12.6.0",
+    "lucide-react": "^0.483.0",
+    "next-auth": "^4.24.11",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-helmet": "^6.1.0",
+    "react-helmet-async": "^2.0.5",
+    "react-hook-form": "^7.54.2",
+    "react-hot-toast": "^2.5.2",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.3.0",
+    "react-scripts": "^5.0.1",
+    "react-toastify": "^11.0.5",
+    "redux-persist": "^6.0.0",
+    "redux-thunk": "^3.1.0",
+    "tailwindcss": "^3.4.17",
+    "web-vitals": "^2.1.4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@stagewise/toolbar-react": "^0.1.2"
+  }
+}

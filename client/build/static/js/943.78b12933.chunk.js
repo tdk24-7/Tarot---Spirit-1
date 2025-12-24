@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkclient=self.webpackChunkclient||[]).push([[943],{9943:(e,s,t)=>{t.r(s),t.d(s,{default:()=>r});var c=t(5043),n=t(6462),a=t(579);const r=()=>{const e=(0,n.Zp)();return(0,c.useEffect)((()=>{e("/admin/dashboard")}),[e]),(0,a.jsx)("div",{className:"flex justify-center items-center h-screen",children:(0,a.jsx)("div",{className:"text-center",children:(0,a.jsx)("p",{className:"text-lg text-gray-600",children:"Redirecting to Admin Dashboard..."})})})}}}]);
+//# sourceMappingURL=943.78b12933.chunk.js.map

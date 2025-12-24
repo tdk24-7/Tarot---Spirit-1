@@ -1,0 +1,26 @@
+/* Custom background images for Tailwind */
+.bg-stars {
+  background-image: url('./assets/images/stars-bg.png');
+  background-repeat: repeat;
+  opacity: 0.3;
+}
+
+.bg-tarot-back {
+  background-image: url('./assets/images/tarot-back.jpg');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bg-card-back {
+  background-image: url('./assets/images/card-back.png');
+  background-size: cover;
+  background-position: center;
+  border-radius: 0.5rem;
+}
+
+.bg-tarot-pattern {
+  background-image: url('./assets/images/tarot-pattern.png');
+  background-repeat: repeat;
+  opacity: 0.05;
+} 

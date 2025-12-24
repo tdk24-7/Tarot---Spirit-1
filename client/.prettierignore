@@ -1,0 +1,24 @@
+# Thư mục build
+build
+dist
+
+# Thư mục dependencies
+node_modules
+
+# File lock
+package-lock.json
+yarn.lock
+
+# File cấu hình
+.github
+.next
+.vscode
+
+# Các file khác
+*.log
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico 

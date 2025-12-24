@@ -1,0 +1,160 @@
+/* Reset CSS cơ bản */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #1a0933; /* Màu nền chính của ứng dụng */
+    color: #f0c05a; /* Màu chữ chính */
+}
+
+/* Các lớp cho các component */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.header {
+    background-color: #1a0933;
+    padding: 20px;
+    border-bottom: 1px solid #3a1c5a;
+}
+
+.footer {
+    background-color: #1a0933;
+    padding: 20px;
+    border-top: 1px solid #3a1c5a;
+    text-align: center;
+}
+
+/* Các lớp cho nút */
+.button {
+    background-color: #e67e22;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #f0c05a;
+}
+
+/* Các lớp cho modal */
+.modal {
+    background-color: #2a1045;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Các lớp cho các thành phần khác */
+.text-center {
+    text-align: center;
+}
+
+.text-gray {
+    color: #ccc;
+}
+
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
+
+/* Custom Variables */
+:root {
+  --primary-color: #9370db;
+  --secondary-color: #8a2be2;
+  --bg-dark: #1a0933;
+  --bg-darker: #0f051d;
+}
+
+/* Custom Font Tracking */
+.tracking-vn-tight {
+  letter-spacing: -0.01em;
+}
+
+/* Custom Line Height */
+.leading-vn {
+  line-height: 1.6;
+}
+
+/* 3D Card Flipping */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Animations */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+/* Base styles */
+body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  @apply bg-[#0f051d] text-white;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[#1a0933];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[#9370db]/50 rounded-full hover:bg-[#9370db];
+}
+
+::-webkit-scrollbar-corner {
+  @apply bg-[#1a0933];
+}
