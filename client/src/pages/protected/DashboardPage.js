@@ -1,4 +1,5 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
+import tarotService from '../../features/tarot/services/tarot.service';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import Navbar from '../../shared/ui/NavBar';
@@ -23,7 +24,7 @@ const StatCard = memo(({ title, value, icon, trend = null, color = 'purple' }) =
     green: 'from-[#43e97b] to-[#38f9d7]',
     orange: 'from-[#fa709a] to-[#fee140]'
   };
-  
+
   return (
     <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 p-6 rounded-xl">
       <div className="flex items-center justify-between mb-4">
@@ -33,11 +34,11 @@ const StatCard = memo(({ title, value, icon, trend = null, color = 'purple' }) =
         {trend && (
           <div className={`flex items-center text-sm ${trend > 0 ? 'text-green-400' : 'text-red-400'}`}>
             <span className="mr-1">{trend > 0 ? '+' : ''}{trend}%</span>
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className={`h-4 w-4 ${trend > 0 ? 'transform rotate-0' : 'transform rotate-180'}`} 
-              fill="none" 
-              viewBox="0 0 24 24" 
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className={`h-4 w-4 ${trend > 0 ? 'transform rotate-0' : 'transform rotate-180'}`}
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -81,11 +82,11 @@ const SimpleBarChart = memo(() => (
       return (
         <div key={index} className="flex items-end">
           <div className="w-10 text-xs text-gray-400">{day}</div>
-          <div 
+          <div
             className="h-3 bg-gradient-to-r from-[#9370db] to-[#8a2be2] rounded-sm transition-all duration-300 hover:opacity-80"
             style={{ width: `${height}%` }}
           ></div>
-          <div className="ml-2 text-xs text-gray-400">{height/10}</div>
+          <div className="ml-2 text-xs text-gray-400">{height / 10}</div>
         </div>
       );
     })}
@@ -142,45 +143,55 @@ const MysticBackground = memo(() => (
 const DashboardPage = () => {
   const { user } = useSelector(state => state.auth);
   const displayName = user?.profile?.full_name || user?.username || 'User';
-  
-  const recentActivities = [
-    { 
-      type: "Xem bói Tarot Tình Yêu", 
-      description: "Bạn đã hoàn thành phiên xem bói Tình Yêu", 
-      time: "10 phút trước", 
-      icon: "❤️", 
-      iconColor: "red" 
-    },
-    { 
-      type: "Đạt được thành tựu", 
-      description: "Bạn đã đạt được thành tựu 'Nhà Khám Phá' cấp độ 1", 
-      time: "3 giờ trước", 
-      icon: "🏆", 
-      iconColor: "yellow" 
-    },
-    { 
-      type: "Cập nhật hồ sơ", 
-      description: "Bạn đã cập nhật thông tin hồ sơ cá nhân", 
-      time: "Hôm qua", 
-      icon: "👤", 
-      iconColor: "blue" 
-    },
-    { 
-      type: "Xem bói Tarot Hàng Ngày", 
-      description: "Bạn đã xem lá bài Tarot Hàng Ngày", 
-      time: "Hôm qua", 
-      icon: "🔮", 
-      iconColor: "purple" 
-    },
-    { 
-      type: "Bình luận", 
-      description: "Bạn đã bình luận trong diễn đàn 'Ý nghĩa lá The Fool'", 
-      time: "1 tuần trước", 
-      icon: "💬", 
-      iconColor: "green" 
-    }
-  ];
-  
+
+  const [stats, setStats] = useState({
+    totalReadings: 0,
+    totalCards: 0
+  });
+  const [recentReadings, setRecentReadings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await tarotService.getUserReadings(1, 5);
+        if (response && response.status === 'success') {
+          setStats({
+            totalReadings: response.total,
+            totalCards: response.total * 3 // Approximation or placeholders
+          });
+          setRecentReadings(response.data.readings);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  const formatActivityTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    return `${diffDays} ngày trước`;
+  };
+
+  const recentActivities = recentReadings.map(reading => ({
+    type: `Xem bói ${reading.type === 'free_form' ? 'Tự do' : reading.type === 'standard' ? 'Cơ bản' : 'AI'}`,
+    description: reading.question || 'Không có câu hỏi',
+    time: formatActivityTime(reading.created_at),
+    icon: "🔮",
+    iconColor: "purple"
+  }));
+
   const upcomingEvents = [
     {
       title: "Horoscope Tháng 4",
@@ -205,10 +216,10 @@ const DashboardPage = () => {
         <title>Tổng Quan | Bói Tarot</title>
         <meta name="description" content="Tổng quan về tài khoản và hoạt động của bạn trên Bói Tarot" />
       </Helmet>
-      
+
       <MysticBackground />
       <Navbar />
-      
+
       {/* Dashboard Content */}
       <section className="relative pt-32 pb-16 px-4 md:px-8">
         <div className="container mx-auto max-w-6xl relative z-10">
@@ -224,14 +235,14 @@ const DashboardPage = () => {
                 </p>
               </div>
               <div className="flex gap-3">
-                <Link 
-                  to="/tarot-readings" 
+                <Link
+                  to="/tarot-readings"
                   className="bg-gradient-to-r from-[#9370db] to-[#8a2be2] text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow tracking-vn-tight"
                 >
                   Xem bói mới
                 </Link>
-                <Link 
-                  to="/profile" 
+                <Link
+                  to="/profile"
                   className="bg-white/10 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/20 transition-colors tracking-vn-tight"
                 >
                   Hồ sơ
@@ -239,42 +250,42 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <StatCard 
-              title="Lần xem bói" 
-              value="25"
+            <StatCard
+              title="Lần xem bói"
+              value={stats.totalReadings}
               icon="🔮"
               trend={8}
               color="purple"
             />
-            
-            <StatCard 
-              title="Lá bài đã xem" 
+
+            <StatCard
+              title="Lá bài đã xem"
               value="78"
               icon="🃏"
               trend={15}
               color="blue"
             />
-            
-            <StatCard 
-              title="Thành tựu" 
+
+            <StatCard
+              title="Thành tựu"
               value="4"
               icon="🏆"
               trend={0}
               color="green"
             />
-            
-            <StatCard 
-              title="Bài viết" 
+
+            <StatCard
+              title="Bài viết"
               value="5"
               icon="📝"
               trend={-5}
               color="orange"
             />
           </div>
-          
+
           {/* Main Dashboard Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Charts */}
@@ -284,7 +295,7 @@ const DashboardPage = () => {
                   <SimpleBarChart />
                 </div>
               </ChartCard>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <ChartCard title="Loại bói phổ biến">
                   <SimplePieChart />
@@ -303,7 +314,7 @@ const DashboardPage = () => {
                     </div>
                   </div>
                 </ChartCard>
-                
+
                 <ChartCard title="Thành tựu sắp đạt được">
                   <div className="space-y-4">
                     <div>
@@ -315,7 +326,7 @@ const DashboardPage = () => {
                         <div className="h-full bg-gradient-to-r from-[#9370db] to-[#8a2be2] rounded-full" style={{ width: '70%' }}></div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-gray-300">Hiền triết cấp 2</span>
@@ -325,7 +336,7 @@ const DashboardPage = () => {
                         <div className="h-full bg-gradient-to-r from-[#4158D0] to-[#C850C0] rounded-full" style={{ width: '45%' }}></div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-gray-300">Cộng đồng cấp 2</span>
@@ -339,19 +350,19 @@ const DashboardPage = () => {
                 </ChartCard>
               </div>
             </div>
-            
+
             {/* Right Column - Activity & Events */}
             <div className="space-y-6">
               {/* Recent Activity */}
               <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 p-6 rounded-xl">
-                <SectionTitle 
-                  title="Hoạt động gần đây" 
+                <SectionTitle
+                  title="Hoạt động gần đây"
                   subtitle="Các hoạt động mới nhất của bạn"
                 />
-                
+
                 <div className="space-y-0">
                   {recentActivities.map((activity, index) => (
-                    <RecentActivityItem 
+                    <RecentActivityItem
                       key={index}
                       type={activity.type}
                       description={activity.description}
@@ -362,14 +373,14 @@ const DashboardPage = () => {
                   ))}
                 </div>
               </div>
-              
+
               {/* Upcoming Events */}
               <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 p-6 rounded-xl">
-                <SectionTitle 
-                  title="Sự kiện sắp tới" 
+                <SectionTitle
+                  title="Sự kiện sắp tới"
                   subtitle="Những cập nhật và sự kiện sắp diễn ra"
                 />
-                
+
                 <div className="space-y-4">
                   {upcomingEvents.map((event, index) => (
                     <div key={index} className="bg-white/5 backdrop-blur-sm border border-purple-900/20 p-4 rounded-lg">
@@ -386,7 +397,7 @@ const DashboardPage = () => {
           </div>
         </div>
       </section>
-      
+
       <Footer />
     </div>
   );

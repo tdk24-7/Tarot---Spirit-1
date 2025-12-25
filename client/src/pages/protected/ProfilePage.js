@@ -10,6 +10,7 @@ import { API_URL, CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '../../
 import { toast } from 'react-toastify';
 import { AnimatePresence } from 'framer-motion';
 import PasswordChangeForm from '../../features/auth/components/PasswordChangeForm';
+import tarotService from '../../features/tarot/services/tarot.service';
 
 // Tạo axiosInstance với cấu hình đúng
 const axiosInstance = axios.create({
@@ -57,7 +58,7 @@ const ProfileInfoItem = memo(({ label, value, icon, isEditing, onChange, name, t
   </div>
 ));
 
-const TarotSessionItem = memo(({ date, reading, image, result }) => (
+const TarotSessionItem = memo(({ id, date, reading, image, result }) => (
   <div className="flex items-center bg-white/5 backdrop-blur-sm border border-purple-900/20 p-4 rounded-xl mb-4 hover:bg-white/10 transition-colors">
     <div className="w-16 h-16 min-w-16 rounded-lg overflow-hidden mr-4">
       <img src={image} alt={reading} className="w-full h-full object-cover" />
@@ -69,7 +70,7 @@ const TarotSessionItem = memo(({ date, reading, image, result }) => (
         <span className="text-xs px-2 py-1 rounded-full bg-[#9370db]/20 text-[#9370db] tracking-vn-tight">{result}</span>
       </div>
     </div>
-    <Link to={`/reading-history/${date}`} className="ml-4 p-2 text-[#9370db] hover:text-white transition-colors">
+    <Link to={`/reading-history/${id}`} className="ml-4 p-2 text-[#9370db] hover:text-white transition-colors">
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
       </svg>
@@ -162,30 +163,38 @@ const ProfilePage = () => {
     }
   }, [user]);
 
-  // Recent readings - trong thực tế sẽ lấy từ API
-  const recentReadings = [
-    {
-      id: 1,
-      date: "2023-03-15",
-      reading: "Tarot Tình Yêu",
-      image: "https://placehold.co/100x100/9370db/white?text=Love",
-      result: "Tích cực"
-    },
-    {
-      id: 2,
-      date: "2023-03-10",
-      reading: "Tarot Sự Nghiệp",
-      image: "https://placehold.co/100x100/9370db/white?text=Career",
-      result: "Cân nhắc"
-    },
-    {
-      id: 3,
-      date: "2023-03-05",
-      reading: "Tarot Hàng Ngày",
-      image: "https://placehold.co/100x100/9370db/white?text=Daily",
-      result: "Cần cẩn trọng"
-    }
-  ];
+  // State for stats and readings
+  const [stats, setStats] = useState({
+    totalReadings: 0
+  });
+  const [recentReadings, setRecentReadings] = useState([]);
+
+  // Fetch usage stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await tarotService.getUserReadings(1, 3);
+        if (response && response.status === 'success') {
+          setStats({
+            totalReadings: response.total
+          });
+          setRecentReadings(response.data.readings);
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile stats", err);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const formatReadingResult = (reading) => {
+    // Determine a simple "result" label based on domain or arbitrary logic for UI
+    if (reading.domain === 'love') return 'Tình cảm';
+    if (reading.domain === 'career') return 'Công việc';
+    if (reading.domain === 'money') return 'Tài chính';
+    return 'Tổng quan';
+  };
+
 
   // Danh sách huy hiệu - trong thực tế sẽ lấy từ API
   const badges = [
@@ -629,15 +638,18 @@ const ProfilePage = () => {
                   </div>
 
                   <div className="space-y-4">
-                    {recentReadings.map(reading => (
+                    {recentReadings.length > 0 ? recentReadings.map(reading => (
                       <TarotSessionItem
                         key={reading.id}
-                        date={reading.date}
-                        reading={reading.reading}
-                        image={reading.image}
-                        result={reading.result}
+                        id={reading.id}
+                        date={reading.created_at}
+                        reading={`Bói bài ${reading.domain === 'love' ? 'Tình Yêu' : reading.domain === 'career' ? 'Sự Nghiệp' : 'Tổng Quan'}`}
+                        image="https://placehold.co/100x100/9370db/white?text=Tarot"
+                        result={formatReadingResult(reading)}
                       />
-                    ))}
+                    )) : (
+                      <p className="text-gray-400 text-center py-4">Chưa có lịch sử xem bói.</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -650,19 +662,19 @@ const ProfilePage = () => {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center pb-4 border-b border-purple-900/20">
                       <p className="text-gray-300 tracking-vn-tight">Số lần xem bói</p>
-                      <p className="text-white font-medium tracking-vn-tight">25</p>
+                      <p className="text-white font-medium tracking-vn-tight">{stats.totalReadings}</p>
                     </div>
                     <div className="flex justify-between items-center pb-4 border-b border-purple-900/20">
                       <p className="text-gray-300 tracking-vn-tight">Loại bói phổ biến</p>
-                      <p className="text-white font-medium tracking-vn-tight">Tình yêu</p>
+                      <p className="text-white font-medium tracking-vn-tight">Tổng hợp</p>
                     </div>
                     <div className="flex justify-between items-center pb-4 border-b border-purple-900/20">
                       <p className="text-gray-300 tracking-vn-tight">Bài viết trên diễn đàn</p>
-                      <p className="text-white font-medium tracking-vn-tight">5</p>
+                      <p className="text-white font-medium tracking-vn-tight">0</p>
                     </div>
                     <div className="flex justify-between items-center">
                       <p className="text-gray-300 tracking-vn-tight">Thành viên từ</p>
-                      <p className="text-white font-medium tracking-vn-tight">28/03/2023</p>
+                      <p className="text-white font-medium tracking-vn-tight">{user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : 'N/A'}</p>
                     </div>
                   </div>
                 </div>

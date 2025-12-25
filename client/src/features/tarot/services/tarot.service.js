@@ -5,6 +5,19 @@ import apiClient from '../../../shared/utils/api/apiClient'
  */
 const tarotService = {
   /**
+   * Fetch daily tarot card
+   * @returns {Promise<Object>} Daily tarot card data
+   */
+  getDailyCard: async () => {
+    try {
+      const response = await apiClient.get('/tarot/daily');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching daily tarot card:', error);
+      throw error;
+    }
+  },
+  /**
    * Fetch all tarot cards
    * @returns {Promise<Array>} Array of tarot cards
    */
