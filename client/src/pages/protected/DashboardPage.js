@@ -93,7 +93,7 @@ const SimpleBarChart = memo(() => (
   </div>
 ));
 
-const SimplePieChart = memo(() => (
+const SimplePieChart = memo(({ value }) => (
   <div className="relative w-full h-40 flex items-center justify-center">
     <svg viewBox="0 0 36 36" className="w-full h-full">
       <path
@@ -123,7 +123,7 @@ const SimplePieChart = memo(() => (
     <div className="absolute inset-0 flex items-center justify-center">
       <div className="text-center">
         <p className="text-xs text-gray-400">Tổng cộng</p>
-        <p className="text-2xl font-bold text-white">25</p>
+        <p className="text-2xl font-bold text-white">{value}</p>
       </div>
     </div>
   </div>
@@ -257,103 +257,20 @@ const DashboardPage = () => {
               title="Lần xem bói"
               value={stats.totalReadings}
               icon="🔮"
-              trend={8}
+              trend={null}
               color="purple"
             />
-
-            <StatCard
-              title="Lá bài đã xem"
-              value="78"
-              icon="🃏"
-              trend={15}
-              color="blue"
-            />
-
-            <StatCard
-              title="Thành tựu"
-              value="4"
-              icon="🏆"
-              trend={0}
-              color="green"
-            />
-
-            <StatCard
-              title="Bài viết"
-              value="5"
-              icon="📝"
-              trend={-5}
-              color="orange"
-            />
+            {/* 
+               Other stats removed as they are not currently supported by backend API 
+               (Total Cards, Achievements, Posts)
+            */}
           </div>
 
           {/* Main Dashboard Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Charts */}
-            <div className="lg:col-span-2 space-y-6">
-              <ChartCard title="Hoạt động trong tuần">
-                <div className="mt-4">
-                  <SimpleBarChart />
-                </div>
-              </ChartCard>
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ChartCard title="Loại bói phổ biến">
-                  <SimplePieChart />
-                  <div className="grid grid-cols-3 gap-2 mt-4">
-                    <div className="flex items-center text-xs">
-                      <span className="block w-3 h-3 rounded-full bg-[#8a2be2] mr-2"></span>
-                      <span className="text-gray-300">Tình yêu</span>
-                    </div>
-                    <div className="flex items-center text-xs">
-                      <span className="block w-3 h-3 rounded-full bg-[#4158D0] mr-2"></span>
-                      <span className="text-gray-300">Sự nghiệp</span>
-                    </div>
-                    <div className="flex items-center text-xs">
-                      <span className="block w-3 h-3 rounded-full bg-[#43e97b] mr-2"></span>
-                      <span className="text-gray-300">Khác</span>
-                    </div>
-                  </div>
-                </ChartCard>
-
-                <ChartCard title="Thành tựu sắp đạt được">
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-300">Chiêm tinh học cấp 2</span>
-                        <span className="text-gray-300">70%</span>
-                      </div>
-                      <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-[#9370db] to-[#8a2be2] rounded-full" style={{ width: '70%' }}></div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-300">Hiền triết cấp 2</span>
-                        <span className="text-gray-300">45%</span>
-                      </div>
-                      <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-[#4158D0] to-[#C850C0] rounded-full" style={{ width: '45%' }}></div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-300">Cộng đồng cấp 2</span>
-                        <span className="text-gray-300">25%</span>
-                      </div>
-                      <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-[#43e97b] to-[#38f9d7] rounded-full" style={{ width: '25%' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </ChartCard>
-              </div>
-            </div>
-
-            {/* Right Column - Activity & Events */}
+            {/* Recent Activity - Full Width */}
             <div className="space-y-6">
-              {/* Recent Activity */}
               <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 p-6 rounded-xl">
                 <SectionTitle
                   title="Hoạt động gần đây"
@@ -361,7 +278,7 @@ const DashboardPage = () => {
                 />
 
                 <div className="space-y-0">
-                  {recentActivities.map((activity, index) => (
+                  {recentActivities.length > 0 ? recentActivities.map((activity, index) => (
                     <RecentActivityItem
                       key={index}
                       type={activity.type}
@@ -370,27 +287,9 @@ const DashboardPage = () => {
                       icon={activity.icon}
                       iconColor={activity.iconColor}
                     />
-                  ))}
-                </div>
-              </div>
-
-              {/* Upcoming Events */}
-              <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 p-6 rounded-xl">
-                <SectionTitle
-                  title="Sự kiện sắp tới"
-                  subtitle="Những cập nhật và sự kiện sắp diễn ra"
-                />
-
-                <div className="space-y-4">
-                  {upcomingEvents.map((event, index) => (
-                    <div key={index} className="bg-white/5 backdrop-blur-sm border border-purple-900/20 p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="text-white font-medium tracking-vn-tight">{event.title}</h4>
-                        <span className="text-xs px-2 py-1 rounded-full bg-[#9370db]/20 text-[#9370db] tracking-vn-tight">{event.date}</span>
-                      </div>
-                      <p className="text-sm text-gray-300 tracking-vn-tight">{event.description}</p>
-                    </div>
-                  ))}
+                  )) : (
+                    <p className="text-gray-400 text-center py-4">Chưa có hoạt động nào.</p>
+                  )}
                 </div>
               </div>
             </div>

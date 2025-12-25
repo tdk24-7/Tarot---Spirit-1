@@ -20,7 +20,6 @@ const MAIN_MENU_ITEMS = [
 ];
 
 const USER_MENU_ITEMS = [
-  { to: path.PROTECTED.DASHBOARD, label: "Tổng quan", icon: "📊" },
   { to: path.PROTECTED.PROFILE, label: "Hồ sơ của tôi", icon: "👤" },
   { to: path.PROTECTED.READING_HISTORY, label: "Lịch sử bói bài", icon: "📜" },
   { to: path.PROTECTED.DAILY_JOURNAL, label: "Nhật ký hàng ngày", icon: "📔" },
@@ -49,7 +48,7 @@ const NavLogo = memo(() => (
 const NavItem = memo(({ to, label, isProtected, isLoggedIn, onLoginClick }) => {
   if (isProtected && !isLoggedIn) {
     return (
-      <button 
+      <button
         onClick={onLoginClick}
         className="text-white hover:text-[#9370db] transition-colors relative px-2 py-1 group tracking-vn-tight flex items-center"
       >
@@ -59,10 +58,10 @@ const NavItem = memo(({ to, label, isProtected, isLoggedIn, onLoginClick }) => {
       </button>
     );
   }
-  
+
   return (
-    <Link 
-      to={to} 
+    <Link
+      to={to}
       className="text-white hover:text-[#9370db] transition-colors relative px-2 py-1 group tracking-vn-tight"
     >
       {label}
@@ -75,18 +74,18 @@ const UserAvatar = memo(({ userData, showUserMenu, setShowUserMenu }) => {
   // Lấy tên hiển thị từ user data
   const displayName = userData?.profile?.full_name || userData?.username || 'User';
   const initial = displayName.charAt(0).toUpperCase();
-  
+
   return (
-    <button 
+    <button
       onClick={() => setShowUserMenu(!showUserMenu)}
       className="flex items-center gap-2 focus:outline-none group"
     >
       <div className="relative w-10 h-10 transform group-hover:scale-105 transition-transform">
         {userData?.profile?.avatar_url ? (
-          <img 
-            src={userData.profile.avatar_url} 
+          <img
+            src={userData.profile.avatar_url}
             alt={displayName}
-            className="absolute inset-0 rounded-full w-full h-full object-cover" 
+            className="absolute inset-0 rounded-full w-full h-full object-cover"
           />
         ) : (
           <>
@@ -110,7 +109,7 @@ const UserAvatar = memo(({ userData, showUserMenu, setShowUserMenu }) => {
 const UserMenu = memo(({ isVisible, userMenuRef, items, onLogout, isAdmin }) => (
   <AnimatePresence>
     {isVisible && (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -10, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -120,9 +119,9 @@ const UserMenu = memo(({ isVisible, userMenuRef, items, onLogout, isAdmin }) => 
       >
         <div className="py-2">
           {items.map((item, index) => (
-            <Link 
+            <Link
               key={index}
-              to={item.to} 
+              to={item.to}
               className="flex items-center gap-3 px-4 py-2 text-white hover:bg-white/10 transition-colors tracking-vn-tight"
             >
               <span className="text-[#9370db]">{item.icon}</span>
@@ -130,8 +129,8 @@ const UserMenu = memo(({ isVisible, userMenuRef, items, onLogout, isAdmin }) => 
             </Link>
           ))}
           {isAdmin && (
-            <Link 
-              to={ADMIN_MENU_ITEM.to} 
+            <Link
+              to={ADMIN_MENU_ITEM.to}
               className="flex items-center gap-3 px-4 py-2 text-white hover:bg-white/10 transition-colors tracking-vn-tight"
             >
               <span className="text-[#9370db]">{ADMIN_MENU_ITEM.icon}</span>
@@ -139,7 +138,7 @@ const UserMenu = memo(({ isVisible, userMenuRef, items, onLogout, isAdmin }) => 
             </Link>
           )}
           <div className="border-t border-white/10 my-1"></div>
-          <button 
+          <button
             onClick={onLogout}
             className="flex items-center gap-3 w-full text-left px-4 py-2 text-white hover:bg-white/10 transition-colors tracking-vn-tight"
           >
@@ -154,7 +153,7 @@ const UserMenu = memo(({ isVisible, userMenuRef, items, onLogout, isAdmin }) => 
 
 const AuthButtons = memo(({ setShowLogin, setShowRegister }) => (
   <>
-    <button 
+    <button
       onClick={() => setShowLogin(true)}
       className="text-white hover:text-[#9370db] transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5 relative group tracking-vn-tight"
       aria-label="Đăng nhập"
@@ -178,11 +177,11 @@ const MobileMenu = memo(({ isVisible, items, mobileMenuRef, setIsMobileMenuOpen,
   const displayName = userData?.profile?.full_name || userData?.username || 'User';
   const email = userData?.email || '';
   const initial = displayName.charAt(0).toUpperCase();
-  
+
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.div 
+        <motion.div
           ref={mobileMenuRef}
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
@@ -196,8 +195,8 @@ const MobileMenu = memo(({ isVisible, items, mobileMenuRef, setIsMobileMenuOpen,
                 <div className="flex items-center gap-4">
                   <div className="relative w-14 h-14">
                     {userData?.profile?.avatar_url ? (
-                      <img 
-                        src={userData.profile.avatar_url} 
+                      <img
+                        src={userData.profile.avatar_url}
                         alt={displayName}
                         className="w-14 h-14 rounded-full object-cover"
                       />
@@ -216,7 +215,7 @@ const MobileMenu = memo(({ isVisible, items, mobileMenuRef, setIsMobileMenuOpen,
                 </div>
               </div>
             )}
-            
+
             <nav className="flex flex-col gap-3">
               {items.map((item, index) => {
                 if (item.protected && !isLoggedIn) {
@@ -236,9 +235,9 @@ const MobileMenu = memo(({ isVisible, items, mobileMenuRef, setIsMobileMenuOpen,
                   );
                 }
                 return (
-                  <Link 
-                    key={index} 
-                    to={item.to} 
+                  <Link
+                    key={index}
+                    to={item.to}
                     className="flex items-center gap-3 p-2 text-white hover:bg-white/10 rounded-lg transition-colors tracking-vn-tight"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -248,16 +247,16 @@ const MobileMenu = memo(({ isVisible, items, mobileMenuRef, setIsMobileMenuOpen,
                 );
               })}
             </nav>
-            
+
             {isLoggedIn ? (
               <>
                 <div className="border-t border-white/10 my-3"></div>
                 <div className="text-sm text-gray-400 mb-2 px-2 tracking-vn-tight">Tùy chọn người dùng</div>
                 <nav className="flex flex-col gap-2">
                   {userMenuItems.map((item, index) => (
-                    <Link 
-                      key={index} 
-                      to={item.to} 
+                    <Link
+                      key={index}
+                      to={item.to}
                       className="flex items-center gap-3 p-2 text-white hover:bg-white/10 rounded-lg transition-colors tracking-vn-tight"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -266,8 +265,8 @@ const MobileMenu = memo(({ isVisible, items, mobileMenuRef, setIsMobileMenuOpen,
                     </Link>
                   ))}
                   {isAdmin && (
-                    <Link 
-                      to={ADMIN_MENU_ITEM.to} 
+                    <Link
+                      to={ADMIN_MENU_ITEM.to}
                       className="flex items-center gap-3 p-2 text-white hover:bg-white/10 rounded-lg transition-colors tracking-vn-tight"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -275,7 +274,7 @@ const MobileMenu = memo(({ isVisible, items, mobileMenuRef, setIsMobileMenuOpen,
                       <span>{ADMIN_MENU_ITEM.label}</span>
                     </Link>
                   )}
-                  <button 
+                  <button
                     onClick={() => {
                       onLogout();
                       setIsMobileMenuOpen(false);
@@ -289,30 +288,30 @@ const MobileMenu = memo(({ isVisible, items, mobileMenuRef, setIsMobileMenuOpen,
               </>
             ) : (
               <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-white/10">
-                <button 
+                <button
                   onClick={() => {
                     setShowLogin(true);
                     setIsMobileMenuOpen(false);
                   }}
                   className="flex items-center justify-center gap-2 p-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors tracking-vn-tight"
                 >
-                  <Icon 
-                    name="User" 
-                    size="sm" 
-                    className="text-[#9370db]" 
+                  <Icon
+                    name="User"
+                    size="sm"
+                    className="text-[#9370db]"
                   />
                   <span>Đăng nhập</span>
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setShowRegister(true);
                     setIsMobileMenuOpen(false);
                   }}
                   className="flex items-center justify-center gap-2 p-2 bg-gradient-to-r from-[#8a2be2] to-[#9370db] text-white rounded-lg tracking-vn-tight"
                 >
-                  <Icon 
-                    name="UserPlus" 
-                    size="sm" 
+                  <Icon
+                    name="UserPlus"
+                    size="sm"
                   />
                   <span>Đăng ký</span>
                 </button>
@@ -331,14 +330,14 @@ const Navbar = () => {
   const [showRegister, setShowRegister] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
   const { user } = useSelector(state => state.auth);
   const { logout } = useAuth();
-  
+
   const isLoggedIn = !!user;
   const userData = user;
   const isAdmin = userData?.role === 'admin';
-  
+
   const userMenuRef = useRef(null);
   const mobileMenuRef = useRef(null);
 
@@ -393,10 +392,10 @@ const Navbar = () => {
 
         <nav className="hidden md:flex gap-6">
           {MAIN_MENU_ITEMS.map((item, index) => (
-            <NavItem 
-              key={index} 
-              to={item.to} 
-              label={item.label} 
+            <NavItem
+              key={index}
+              to={item.to}
+              label={item.label}
               isProtected={item.protected}
               isLoggedIn={isLoggedIn}
               onLoginClick={handleLoginClick}
@@ -407,26 +406,26 @@ const Navbar = () => {
         <div className="flex items-center gap-3">
           {isLoggedIn ? (
             <div className="relative z-[100]">
-              <UserAvatar 
-                userData={userData} 
-                showUserMenu={showUserMenu} 
-                setShowUserMenu={setShowUserMenu} 
+              <UserAvatar
+                userData={userData}
+                showUserMenu={showUserMenu}
+                setShowUserMenu={setShowUserMenu}
               />
-              <UserMenu 
-                isVisible={showUserMenu} 
-                userMenuRef={userMenuRef} 
+              <UserMenu
+                isVisible={showUserMenu}
+                userMenuRef={userMenuRef}
                 items={USER_MENU_ITEMS}
                 onLogout={handleLogout}
                 isAdmin={isAdmin}
               />
             </div>
           ) : (
-            <AuthButtons 
+            <AuthButtons
               setShowLogin={setShowLogin}
               setShowRegister={setShowRegister}
             />
           )}
-          
+
           {/* Mobile menu button */}
           <button
             className="md:hidden flex items-center p-2 rounded-lg hover:bg-white/5 transition-colors"
@@ -441,9 +440,9 @@ const Navbar = () => {
           </button>
         </div>
       </div>
-      
+
       {/* Mobile Menu */}
-      <MobileMenu 
+      <MobileMenu
         isVisible={isMobileMenuOpen}
         items={mobileMenuItems}
         mobileMenuRef={mobileMenuRef}
@@ -459,8 +458,8 @@ const Navbar = () => {
 
       <AnimatePresence>
         {showLogin && (
-          <LoginForm 
-            onClose={() => setShowLogin(false)} 
+          <LoginForm
+            onClose={() => setShowLogin(false)}
             onSwitchToRegister={() => {
               setShowLogin(false);
               setShowRegister(true);
@@ -468,8 +467,8 @@ const Navbar = () => {
           />
         )}
         {showRegister && (
-          <RegisterForm 
-            onClose={() => setShowRegister(false)} 
+          <RegisterForm
+            onClose={() => setShowRegister(false)}
             onSwitchToLogin={() => {
               setShowRegister(false);
               setShowLogin(true);

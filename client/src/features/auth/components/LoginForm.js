@@ -8,12 +8,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { path } from '../../../shared/utils/routes';
 import { useDispatch } from 'react-redux';
 import { loginAdmin, loginSuccess } from '../slices/authSlice';
-import { 
-  ModalHeader, 
-  InputField, 
-  CheckboxField, 
-  AuthButton, 
-  Divider, 
+import {
+  ModalHeader,
+  InputField,
+  CheckboxField,
+  AuthButton,
+  Divider,
   ModalWrapper,
   ErrorAlert,
   BottomLink
@@ -32,9 +32,9 @@ const LoginForm = ({ onClose, onSwitchToRegister, onSwitchToForgotPassword, mess
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  
+
   // Get redirect path from props or location state
-  const finalRedirectPath = redirectPath || location.state?.from || path.PROTECTED.DASHBOARD;
+  const finalRedirectPath = redirectPath || location.state?.from || path.PROTECTED.PROFILE;
   const customMessage = message || location.state?.message || '';
 
   // Prevent scroll when modal is visible
@@ -42,14 +42,14 @@ const LoginForm = ({ onClose, onSwitchToRegister, onSwitchToForgotPassword, mess
     // Save initial scroll position
     const scrollY = window.scrollY;
     const scrollX = window.scrollX;
-    
+
     // Lock scroll
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100vh';
     document.body.style.paddingRight = '15px'; // Prevent layout shift
-    
+
     setIsLoaded(true);
-    
+
     // Clean up when component unmounts
     return () => {
       // Restore initial scroll position
@@ -64,25 +64,25 @@ const LoginForm = ({ onClose, onSwitchToRegister, onSwitchToForgotPassword, mess
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if(!email || !password) {
+
+    if (!email || !password) {
       setError('Vui lòng điền đầy đủ email và mật khẩu');
       return;
     }
-    
+
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       // Check if this is an admin email (trong môi trường thực tế, điều này nên được xử lý bên server)
       const isAdminEmail = email.includes('@admin') || email.includes('admin@') || email.endsWith('@tarot.vn');
-      
+
       let success;
       if (isAdminEmail) {
         // Nếu email có dạng admin, sử dụng loginAdmin từ slice trực tiếp
         const resultAction = await dispatch(loginAdmin({ email, password })).unwrap();
         console.log('Admin login result:', resultAction);
-        
+
         if (resultAction.user && resultAction.user.isAdmin) {
           if (onClose) onClose();
           navigate('/admin/dashboard');
@@ -95,7 +95,7 @@ const LoginForm = ({ onClose, onSwitchToRegister, onSwitchToForgotPassword, mess
         // Regular login for regular users
         success = await login(email, password);
       }
-      
+
       if (success && onClose) {
         onClose();
       }
@@ -106,28 +106,28 @@ const LoginForm = ({ onClose, onSwitchToRegister, onSwitchToForgotPassword, mess
       setIsSubmitting(false);
     }
   };
-  
+
   const handleSocialLoginSuccess = (result) => {
     console.log('Social login success data:', result);
-    
+
     if (result && result.user && result.token) {
       // Lưu token và thông tin người dùng vào localStorage
       localStorage.setItem('token', result.token);
       localStorage.setItem('user', JSON.stringify(result.user));
-      
+
       // Dispatch action để cập nhật trạng thái đăng nhập trong Redux
       dispatch(loginSuccess({ user: result.user, token: result.token }));
-      
+
       // Hiển thị thông báo thành công
       toast.success('Đăng nhập thành công!');
-      
+
       // Chuyển hướng người dùng sau khi đăng nhập
       if (result.user.role === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate(finalRedirectPath);
       }
-      
+
       // Đóng form nếu cần
       if (onClose) {
         onClose();
@@ -147,17 +147,17 @@ const LoginForm = ({ onClose, onSwitchToRegister, onSwitchToForgotPassword, mess
   const handleForgotPassword = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Try both the passed callback and direct navigation
     if (onSwitchToForgotPassword) {
       onSwitchToForgotPassword();
     }
-    
+
     // Direct navigation as fallback
-    navigate(path.AUTH.FORGOT_PASSWORD, { 
-      state: { from: finalRedirectPath, message: customMessage } 
+    navigate(path.AUTH.FORGOT_PASSWORD, {
+      state: { from: finalRedirectPath, message: customMessage }
     });
-    
+
     // Close modal if it exists
     if (onClose) {
       onClose();
@@ -167,9 +167,9 @@ const LoginForm = ({ onClose, onSwitchToRegister, onSwitchToForgotPassword, mess
   const modalContent = (
     <ModalWrapper onClose={onClose}>
       <ModalHeader title="Đăng nhập" onClose={onClose} />
-      
+
       <ErrorAlert error={error || authError} />
-      
+
       {/* Message notification */}
       {customMessage && (
         <div className={`mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm transition-all duration-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -216,16 +216,16 @@ const LoginForm = ({ onClose, onSwitchToRegister, onSwitchToForgotPassword, mess
           Đăng nhập
         </AuthButton>
       </form>
-      
+
       <Divider text="Hoặc tiếp tục với" />
-      
+
       <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 transition-all duration-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: isLoaded ? '500ms' : '0ms' }}>
         {/* Facebook login button */}
         <FacebookLoginButton onLoginSuccess={handleSocialLoginSuccess} />
         {/* Google login button */}
         <GoogleLoginButton onLoginSuccess={handleSocialLoginSuccess} onFailure={handleSocialLoginFailure} />
       </div>
-      
+
       <BottomLink
         isLoaded={isLoaded}
         delay={isLoaded ? '600ms' : '0ms'}

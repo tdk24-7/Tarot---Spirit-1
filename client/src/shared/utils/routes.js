@@ -37,7 +37,6 @@ export const path = {
     PROFILE: '/profile',
     READING_HISTORY: '/reading-history',
     READING_DETAIL: '/reading-history/:id',
-    DASHBOARD: '/dashboard',
     SETTINGS: '/settings',
     DAILY_JOURNAL: '/daily-journal',
     JOURNAL: '/journal',

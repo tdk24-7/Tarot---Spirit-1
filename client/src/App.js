@@ -20,7 +20,7 @@ import AuthPage from './pages/public/AuthPage';
 import ProfilePage from './pages/protected/ProfilePage';
 import ReadingHistoryPage from './pages/protected/ReadingHistoryPage';
 import ReadingDetailPage from './pages/protected/ReadingDetailPage';
-import DashboardPage from './pages/protected/DashboardPage';
+
 import PremiumServicesPage from './pages/protected/PremiumServicesPage';
 import PaymentPage from './pages/protected/PaymentPage';
 import PaymentSuccessPage from './pages/protected/PaymentSuccessPage';
@@ -67,7 +67,7 @@ function App() {
     </div>
   ), []);
 
-  return (  
+  return (
     <Router>
       <AuthProvider>
         <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="dark" />
@@ -112,7 +112,7 @@ function App() {
           <Route path={path.PUBLIC.TAROTCARDS} element={<TarotCardsPage />} />
           <Route path={path.PUBLIC.PRIVACY_POLICY} element={<PrivacyPolicyPage />} />
           <Route path={path.PUBLIC.TERMS} element={<TermsPage />} />
-          
+
           {/* Protected Routes */}
           <Route path={path.PROTECTED.PROFILE} element={
             <ProtectedRoute>
@@ -157,16 +157,6 @@ function App() {
           <Route path={path.PROTECTED.JOURNAL_EDIT} element={
             <ProtectedRoute>
               <JournalFormPage />
-            </ProtectedRoute>
-          } />
-          <Route path={path.PROTECTED.DASHBOARD} element={
-            <ProtectedRoute>
-              {/* Sử dụng kiểm tra trực tiếp trong render */}
-              {isAuthenticated && (user?.isAdmin || user?.role === 'admin') ? (
-                <Navigate to={path.ADMIN.DASHBOARD} replace />
-              ) : (
-                <DashboardPage />
-              )}
             </ProtectedRoute>
           } />
           <Route path={path.PROTECTED.PAYMENT} element={
@@ -251,7 +241,7 @@ function App() {
               </React.Suspense>
             </AdminRoute>
           } />
-          
+
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
