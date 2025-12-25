@@ -33,7 +33,9 @@ const JournalPage = () => {
       if (filter.mood) activeFilters.mood = filter.mood;
 
       const result = await getJournals({ ...activeFilters, ...params });
-      setJournals(result.journals);
+      // Xử lý response từ API (chuẩn: result.data.journals, hoặc fallback nếu cấu trúc thay đổi)
+      const journalsList = result.data?.journals || result.journals || (Array.isArray(result) ? result : []);
+      setJournals(journalsList);
     } catch (err) {
       setError(err.message || 'Có lỗi xảy ra khi tải nhật ký');
       console.error('Error fetching journals:', err);
@@ -111,7 +113,7 @@ const JournalPage = () => {
                 className="w-full px-3 py-2 rounded-lg bg-white/5 border border-purple-900/30 text-white focus:border-[#9370db] focus:outline-none"
               />
             </div>
-            
+
             <div>
               <label htmlFor="endDate" className="block text-sm font-medium mb-1">
                 Đến ngày
@@ -125,7 +127,7 @@ const JournalPage = () => {
                 className="w-full px-3 py-2 rounded-lg bg-white/5 border border-purple-900/30 text-white focus:border-[#9370db] focus:outline-none"
               />
             </div>
-            
+
             <div>
               <label htmlFor="tag" className="block text-sm font-medium mb-1">
                 Tag
@@ -140,7 +142,7 @@ const JournalPage = () => {
                 className="w-full px-3 py-2 rounded-lg bg-white/5 border border-purple-900/30 text-white focus:border-[#9370db] focus:outline-none"
               />
             </div>
-            
+
             <div>
               <label htmlFor="mood" className="block text-sm font-medium mb-1">
                 Tâm trạng
@@ -155,7 +157,7 @@ const JournalPage = () => {
                 className="w-full px-3 py-2 rounded-lg bg-white/5 border border-purple-900/30 text-white focus:border-[#9370db] focus:outline-none"
               />
             </div>
-            
+
             <div className="md:col-span-2 lg:col-span-4 flex justify-end">
               <button
                 type="submit"
@@ -204,28 +206,28 @@ const JournalPage = () => {
                     Riêng tư
                   </div>
                 )}
-                
+
                 <div className="mb-4">
                   <h3 className="text-xl font-semibold mb-1">{journal.title}</h3>
                   <p className="text-sm text-gray-400">{formatDate(journal.entry_date)}</p>
                 </div>
-                
+
                 <p className="text-gray-300 line-clamp-3 mb-4">{journal.content}</p>
-                
+
                 <div className="flex flex-wrap gap-2 mb-6">
                   {journal.mood && (
                     <span className="bg-[#9370db]/20 text-[#9370db] px-2 py-1 rounded-full text-xs">
                       {journal.mood}
                     </span>
                   )}
-                  
-                  {journal.tags && journal.tags.split(',').map((tag, index) => (
+
+                  {journal.tags && (Array.isArray(journal.tags) ? journal.tags : (typeof journal.tags === 'string' ? journal.tags.split(',') : [])).map((tag, index) => (
                     <span key={index} className="bg-gray-800/80 text-gray-300 px-2 py-1 rounded-full text-xs">
                       #{tag.trim()}
                     </span>
                   ))}
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <Link
                     to={`/journal/${journal.id}`}
@@ -233,7 +235,7 @@ const JournalPage = () => {
                   >
                     Đọc tiếp
                   </Link>
-                  
+
                   <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Link
                       to={`/journal/${journal.id}/edit`}

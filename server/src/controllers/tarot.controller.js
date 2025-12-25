@@ -63,51 +63,158 @@ exports.getCardById = async (req, res, next) => {
   }
 };
 
-// Lấy lá bài hàng ngày
+// Lấy lá bài hàng ngày (có tích hợp AI và lưu database)
 exports.getDailyCard = async (req, res, next) => {
   try {
-    // Lấy ngày hiện tại làm seed để luôn trả về cùng một lá bài trong một ngày
+    const userId = req.user ? req.user.id : null;
     const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    // 1. Nếu user đã đăng nhập, kiểm tra xem đã có reading cho hôm nay chưa
+    if (userId) {
+      const existingReading = await TarotReading.findOne({
+        where: {
+          user_id: userId,
+          type: 'daily',
+          created_at: {
+            [db.Sequelize.Op.between]: [startOfDay, endOfDay]
+          }
+        },
+        include: [{
+          model: TarotReadingCard,
+          as: 'cards',
+          include: [{
+            model: TarotCard,
+            as: 'card'
+          }]
+        }]
+      });
+
+      if (existingReading && existingReading.cards && existingReading.cards.length > 0) {
+        console.log('Found existing daily reading for user');
+        const readingCard = existingReading.cards[0];
+        const cardEntity = readingCard.card;
+
+        let interpretationJSON;
+        try {
+          interpretationJSON = JSON.parse(existingReading.interpretation || existingReading.combined_interpretation);
+        } catch (e) {
+          interpretationJSON = { dailyMessage: existingReading.combined_interpretation };
+        }
+
+        return res.status(200).json({
+          status: 'success',
+          data: {
+            date: startOfDay.toISOString().split('T')[0],
+            card: {
+              ...cardEntity.toJSON(),
+              image_url: cardEntity.image_url || cardEntity.imageUrl,
+              imageUrl: cardEntity.image_url || cardEntity.imageUrl,
+              isReversed: readingCard.is_reversed,
+              dailyMessage: interpretationJSON.dailyMessage || existingReading.combined_interpretation,
+              loveMessage: interpretationJSON.loveMessage || "Chưa có thông điệp",
+              careerMessage: interpretationJSON.careerMessage || "Chưa có thông điệp",
+              healthMessage: interpretationJSON.healthMessage || "Chưa có thông điệp",
+              keywords: interpretationJSON.keywords || []
+            }
+          }
+        });
+      }
+    }
+
+    // 2. Nếu chưa có, tạo mới
+    // Tạo seed: Ngày + UserID (nếu có) để mỗi người có lá bài riêng
     const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-    const seed = dateString.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    // Nếu có userId, cộng thêm vào seed để khác nhau giữa các user. Nếu không (guest), dùng seed chung theo ngày.
+    const userSeedPart = userId ? userId.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
+    const dateSeedPart = dateString.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const totalSeed = dateSeedPart + userSeedPart;
 
-    // Lấy tổng số lá bài
     const cardCount = await TarotCard.count();
-
-    // Chọn một lá bài ngẫu nhiên nhưng cố định cho ngày
-    const randomIndex = seed % cardCount;
+    const randomIndex = totalSeed % cardCount;
 
     const cards = await TarotCard.findAll({
-      order: [
-        ['id', 'ASC']
-      ],
+      order: [['id', 'ASC']],
       offset: randomIndex,
       limit: 1
     });
 
     if (!cards.length) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'No cards found'
+      return res.status(404).json({ status: 'error', message: 'No cards found' });
+    }
+
+    const card = cards[0];
+    const isReversed = (totalSeed % 2) === 1; // Logic ngược xuôi ngẫu nhiên theo ngày + user
+
+    // 3. Gọi AI để tạo interpretation
+    let aiResponse = {
+      dailyMessage: isReversed ? card.general_reversed_meaning : card.general_upright_meaning,
+      loveMessage: "Thông điệp tình yêu đang được cập nhật...",
+      careerMessage: "Thông điệp sự nghiệp đang được cập nhật...",
+      healthMessage: "Thông điệp sức khỏe đang được cập nhật...",
+      keywords: ["Tarot", "Daily"]
+    };
+
+    try {
+      const prompt = `
+        Bạn là một chuyên gia Tarot chuyên nghiệp. Hãy giải thích lá bài "${card.name}" (${isReversed ? 'Ngược' : 'Xuôi'}) cho bói bài hàng ngày (Daily Tarot).
+        Hãy trả về kết quả dưới dạng JSON KHÔNG CÓ Markdown code block, chỉ thuần JSON string với cấu trúc sau:
+        {
+          "dailyMessage": "Thông điệp tổng quan ngắn gọn (khoảng 2-3 câu) cho ngày hôm nay.",
+          "loveMessage": "Lời khuyên ngắn gọn về tình cảm.",
+          "careerMessage": "Lời khuyên ngắn gọn về công việc/sự nghiệp.",
+          "healthMessage": "Lời khuyên ngắn gọn về sức khỏe/tinh thần.",
+          "keywords": ["từ khóa 1", "từ khóa 2", "từ khóa 3"]
+        }
+        Lưu ý: Giọng văn nhẹ nhàng, chữa lành, và sâu sắc.
+      `;
+
+      const rawAiContent = await generateAIResponse(prompt);
+      // Clean up markdown syntax if AI adds it
+      const jsonStr = rawAiContent.replace(/```json/g, '').replace(/```/g, '').trim();
+      aiResponse = JSON.parse(jsonStr);
+      console.log('AI generated daily interpretation successfully');
+    } catch (aiError) {
+      console.error('AI generation failed, using fallback:', aiError);
+    }
+
+    // 4. Lưu vào database nếu user đã đăng nhập
+    if (userId) {
+      const newReading = await TarotReading.create({
+        user_id: userId,
+        topic_id: 1, // Default topic usually
+        spread_id: 1, // Single card spread
+        type: 'daily',
+        question: 'Daily Tarot Reading for ' + dateString,
+        summary: aiResponse.dailyMessage, // Save summary for history list
+        combined_interpretation: JSON.stringify(aiResponse), // Save full JSON here
+        interpretation_source: 'AI'
+      });
+
+      await TarotReadingCard.create({
+        reading_id: newReading.id,
+        card_id: card.id,
+        position_in_spread: 1,
+        is_reversed: isReversed,
+        interpretation: aiResponse.dailyMessage,
+        interpretation_source: 'AI'
       });
     }
 
-    // Tạo một giải thích đơn giản
-    const card = cards[0];
-    const isReversed = (seed % 2) === 1;
-    const interpretation = isReversed ? card.reversedMeaning : card.normalMeaning;
-
+    // 5. Trả về kết quả
     res.status(200).json({
       status: 'success',
       data: {
         date: dateString,
         card: {
           ...card.toJSON(),
-          isReversed
-        },
-        interpretation
+          isReversed,
+          ...aiResponse
+        }
       }
     });
+
   } catch (error) {
     next(error);
   }
@@ -796,9 +903,10 @@ exports.getReadingById = async (req, res, next) => {
         number: rc.card.number,
         position: rc.position_in_spread,
         isReversed: rc.is_reversed,
-        imageUrl: rc.card.image_url || rc.card.imageUrl,
-        meaning: rc.is_reversed ? rc.card.reversedMeaning : rc.card.normalMeaning,
-        interpretation: rc.interpretation || (rc.is_reversed ? rc.card.reversedMeaning : rc.card.normalMeaning)
+        image_url: rc.card.image_url || rc.card.imageUrl, // Normalize key for FE
+        imageUrl: rc.card.image_url || rc.card.imageUrl, // Keep legacy key
+        meaning: rc.is_reversed ? rc.card.general_reversed_meaning : rc.card.general_upright_meaning, // Correct model fields
+        interpretation: rc.interpretation || (rc.is_reversed ? rc.card.general_reversed_meaning : rc.card.general_upright_meaning)
       };
     }).filter(Boolean) : [];
 

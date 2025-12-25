@@ -20,17 +20,17 @@ exports.getPosts = async (req, res, next) => {
 
     // Xây dựng điều kiện tìm kiếm
     const where = { is_approved: true };
-    
+
     // Lọc theo danh mục
     if (category) {
       where.category = category;
     }
-    
+
     // Lọc theo tag
     if (tag) {
       where.tags = { [db.Sequelize.Op.contains]: [tag] };
     }
-    
+
     // Tìm kiếm
     if (search) {
       where[db.Sequelize.Op.or] = [
@@ -240,7 +240,8 @@ exports.createPost = async (req, res, next) => {
       likes: 0,
       views: 0,
       is_pinned: false,
-      is_approved: !requireApproval // Admin không cần duyệt
+      is_pinned: false,
+      is_approved: true // Auto-approve for now
     });
 
     // Cập nhật thống kê của user
@@ -250,7 +251,7 @@ exports.createPost = async (req, res, next) => {
 
     res.status(201).json({
       status: 'success',
-      message: requireApproval ? 'Post created and waiting for approval' : 'Post created successfully',
+      message: 'Post created successfully',
       data: {
         post: {
           id: post.id,
@@ -417,7 +418,7 @@ exports.toggleLikePost = async (req, res, next) => {
       // Đã like, giờ unlike
       await like.destroy();
       await post.decrement('likes');
-      
+
       res.status(200).json({
         status: 'success',
         message: 'Post unliked successfully',
@@ -433,7 +434,7 @@ exports.toggleLikePost = async (req, res, next) => {
         user_id: userId
       });
       await post.increment('likes');
-      
+
       res.status(200).json({
         status: 'success',
         message: 'Post liked successfully',
@@ -666,7 +667,7 @@ exports.toggleLikeComment = async (req, res, next) => {
       // Đã like, giờ unlike
       await like.destroy();
       await comment.decrement('likes');
-      
+
       res.status(200).json({
         status: 'success',
         message: 'Comment unliked successfully',
@@ -682,7 +683,7 @@ exports.toggleLikeComment = async (req, res, next) => {
         user_id: userId
       });
       await comment.increment('likes');
-      
+
       res.status(200).json({
         status: 'success',
         message: 'Comment liked successfully',

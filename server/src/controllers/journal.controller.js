@@ -18,22 +18,23 @@ exports.getJournals = async (req, res, next) => {
 
     // Xây dựng điều kiện tìm kiếm
     const where = { user_id: userId };
-    
+
     // Filter theo mood
     if (mood) {
       where.mood = mood;
     }
-    
+
     // Filter theo tag
     if (tag) {
-      where.tags = { [db.Sequelize.Op.contains]: [tag] };
+      // MySQL doesn't support Op.contains for JSON, use Op.like as a workaround for simple array strings
+      where.tags = { [db.Sequelize.Op.like]: `%"${tag}"%` };
     }
-    
+
     // Tìm kiếm theo tiêu đề hoặc nội dung
     if (search) {
       where[db.Sequelize.Op.or] = [
-        { title: { [db.Sequelize.Op.iLike]: `%${search}%` } },
-        { content: { [db.Sequelize.Op.iLike]: `%${search}%` } }
+        { title: { [db.Sequelize.Op.like]: `%${search}%` } },
+        { content: { [db.Sequelize.Op.like]: `%${search}%` } }
       ];
     }
 
@@ -48,8 +49,8 @@ exports.getJournals = async (req, res, next) => {
       order: [[sortBy, sortOrder.toUpperCase()]],
       include: [{
         model: TarotReading,
-        as: 'associatedReading',
-        attributes: ['id', 'type', 'question'],
+        as: 'reading',
+        attributes: ['id', 'question'],
         required: false
       }]
     });
@@ -63,10 +64,10 @@ exports.getJournals = async (req, res, next) => {
       tags: journal.tags,
       createdAt: journal.created_at,
       updatedAt: journal.updated_at,
-      associatedReading: journal.associatedReading ? {
-        id: journal.associatedReading.id,
-        type: journal.associatedReading.type,
-        question: journal.associatedReading.question
+      associatedReading: journal.reading ? {
+        id: journal.reading.id,
+        // type was removed
+        question: journal.reading.question
       } : null
     }));
 
@@ -132,7 +133,7 @@ exports.createJournal = async (req, res, next) => {
           content: journal.content,
           mood: journal.mood,
           tags: journal.tags,
-          createdAt: journal.created_at,
+          createdAt: journal.createdAt,
           associatedReadingId: journal.associated_reading_id
         }
       }
@@ -156,7 +157,7 @@ exports.getJournalById = async (req, res, next) => {
       },
       include: [{
         model: TarotReading,
-        as: 'associatedReading',
+        as: 'reading',
         required: false
       }]
     });
@@ -177,11 +178,10 @@ exports.getJournalById = async (req, res, next) => {
       tags: journal.tags,
       createdAt: journal.created_at,
       updatedAt: journal.updated_at,
-      associatedReading: journal.associatedReading ? {
-        id: journal.associatedReading.id,
-        type: journal.associatedReading.type,
-        question: journal.associatedReading.question,
-        createdAt: journal.associatedReading.created_at
+      associatedReading: journal.reading ? {
+        id: journal.reading.id,
+        question: journal.reading.question,
+        createdAt: journal.reading.created_at
       } : null
     };
 
@@ -241,8 +241,8 @@ exports.updateJournal = async (req, res, next) => {
           content: journal.content,
           mood: journal.mood,
           tags: journal.tags,
-          createdAt: journal.created_at,
-          updatedAt: journal.updated_at
+          createdAt: journal.createdAt,
+          updatedAt: journal.updatedAt
         }
       }
     });

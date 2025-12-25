@@ -75,6 +75,34 @@ const forumService = {
             console.error(`Error adding comment to post ${postId}:`, error);
             throw error;
         }
+    },
+
+    /**
+     * Toggle like on a comment
+     * @param {number|string} commentId - Comment ID
+     * @returns {Promise<Object>} Like status
+     */
+    likeComment: async (commentId) => {
+        try {
+            const response = await apiClient.post(`/forum/comments/${commentId}/like`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error liking comment ${commentId}:`, error);
+            throw error;
+        }
+    },
+    /**
+     * Get post details by ID (Alias for getPostById)
+     */
+    getPost: async (id) => {
+        return forumService.getPostById(id);
+    },
+
+    /**
+     * Add a comment (Alias for addComment)
+     */
+    createComment: async (postId, data) => {
+        return forumService.addComment(postId, data);
     }
 };
 

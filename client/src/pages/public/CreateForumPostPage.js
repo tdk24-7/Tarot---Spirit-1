@@ -6,6 +6,7 @@ import { CreatePostForm } from '../../features/forum/ForumComponents';
 import { Icon } from '../../shared/components/common';
 import { useAuth } from '../../features/auth/hook/useAuth';
 import { path } from '../../shared/utils/routes';
+import forumService from '../../features/forum/services/forum.service';
 
 // Decorative Elements
 const MysticBackground = memo(() => (
@@ -22,56 +23,68 @@ const CreateForumPostPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useAuth();
-  
+
   // Redirect unauthenticated users to login
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate(path.AUTH.LOGIN, { 
-        state: { 
-          from: path.PUBLIC.FORUM_CREATE_POST, 
-          message: 'Vui lòng đăng nhập để tạo bài viết mới' 
-        } 
+      navigate(path.AUTH.LOGIN, {
+        state: {
+          from: path.PUBLIC.FORUM_CREATE_POST,
+          message: 'Vui lòng đăng nhập để tạo bài viết mới'
+        }
       });
     }
   }, [isAuthenticated, navigate]);
-  
+
   const handleSubmit = async (formData) => {
     setLoading(true);
-    
-    // Fake API call for demo purposes
-    // In a real app, this would be replaced with an actual API call
-    setTimeout(() => {
-      console.log('Submitting post:', formData);
+
+    try {
+      const response = await forumService.createPost({
+        title: formData.title,
+        content: formData.content,
+        category: formData.category,
+        tags: formData.tags // Already an array from CreatePostForm
+      });
+
+      if (response && response.status === 'success') {
+        navigate(path.PUBLIC.FORUM);
+      } else {
+        console.error('Failed to create post:', response);
+        // Handle error (show toast notification ideally)
+      }
+    } catch (error) {
+      console.error('Error creating post:', error);
+    } finally {
       setLoading(false);
-      navigate(path.PUBLIC.FORUM);
-    }, 1500);
+    }
   };
-  
+
   // If not authenticated, show nothing (will redirect via useEffect)
   if (!isAuthenticated) {
     return null;
   }
-  
+
   return (
     <>
       <Helmet>
         <title>Tạo bài viết mới | Diễn Đàn Tarot</title>
         <meta name="description" content="Tạo bài viết mới để chia sẻ kiến thức và kinh nghiệm về Tarot với cộng đồng." />
       </Helmet>
-      
+
       <ForumLayout
         title="Tạo bài viết mới"
         description="Chia sẻ kiến thức, đặt câu hỏi hoặc bắt đầu một cuộc thảo luận với cộng đồng Tarot."
       >
         <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 rounded-xl p-6 md:p-8">
-          <CreatePostForm 
-            onSubmit={handleSubmit} 
-            loading={loading} 
+          <CreatePostForm
+            onSubmit={handleSubmit}
+            loading={loading}
           />
         </div>
-        
+
         <div className="mt-8 flex justify-between items-center">
-          <button 
+          <button
             onClick={() => navigate(path.PUBLIC.FORUM)}
             className="inline-flex items-center gap-2 text-gray-400 hover:text-[#9370db] transition-colors tracking-vn-tight"
           >

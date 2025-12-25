@@ -42,42 +42,42 @@ export const RichTextEditor = memo(({ value, onChange, placeholder = 'Nhập n�
   return (
     <div className="border border-white/10 rounded-lg overflow-hidden bg-white/5">
       <div className="flex items-center border-b border-white/10 p-2 bg-white/5">
-        <ToolbarButton 
-          icon="Bold" 
-          label="Đậm" 
+        <ToolbarButton
+          icon="Bold"
+          label="Đậm"
           active={activeControls.bold}
-          onClick={() => handleToolbarAction('bold')} 
+          onClick={() => handleToolbarAction('bold')}
         />
-        <ToolbarButton 
-          icon="Italic" 
-          label="Nghiêng" 
+        <ToolbarButton
+          icon="Italic"
+          label="Nghiêng"
           active={activeControls.italic}
-          onClick={() => handleToolbarAction('italic')} 
+          onClick={() => handleToolbarAction('italic')}
         />
-        <ToolbarButton 
-          icon="Underline" 
-          label="Gạch chân" 
+        <ToolbarButton
+          icon="Underline"
+          label="Gạch chân"
           active={activeControls.underline}
-          onClick={() => handleToolbarAction('underline')} 
+          onClick={() => handleToolbarAction('underline')}
         />
         <div className="h-5 w-px bg-white/10 mx-2"></div>
-        <ToolbarButton 
-          icon="List" 
-          label="Danh sách" 
+        <ToolbarButton
+          icon="List"
+          label="Danh sách"
           active={activeControls.list}
-          onClick={() => handleToolbarAction('list')} 
+          onClick={() => handleToolbarAction('list')}
         />
-        <ToolbarButton 
-          icon="Image" 
-          label="Hình ảnh" 
+        <ToolbarButton
+          icon="Image"
+          label="Hình ảnh"
           active={activeControls.image}
-          onClick={() => handleToolbarAction('image')} 
+          onClick={() => handleToolbarAction('image')}
         />
-        <ToolbarButton 
-          icon="Link" 
-          label="Liên kết" 
+        <ToolbarButton
+          icon="Link"
+          label="Liên kết"
           active={activeControls.link}
-          onClick={() => handleToolbarAction('link')} 
+          onClick={() => handleToolbarAction('link')}
         />
       </div>
       <textarea
@@ -118,13 +118,13 @@ export const TagInput = memo(({ tags, setTags, maxTags = 5 }) => {
     <div className="border border-white/10 rounded-lg bg-white/5 p-2 focus-within:border-[#9370db] transition-colors">
       <div className="flex flex-wrap gap-2 mb-2">
         {tags.map((tag, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className="flex items-center gap-1 bg-[#2a1045] px-2 py-1 rounded-full text-xs tracking-vn-tight"
           >
             <span>#{tag}</span>
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => removeTag(tag)}
               className="text-gray-400 hover:text-white"
             >
@@ -183,9 +183,8 @@ export const CategorySelect = memo(({ categories, selected, onChange }) => {
             {categories.map((category) => (
               <button
                 key={category.id}
-                className={`w-full text-left px-4 py-3 hover:bg-white/5 flex items-center gap-2 ${
-                  selected === category.label ? 'bg-white/10' : ''
-                }`}
+                className={`w-full text-left px-4 py-3 hover:bg-white/5 flex items-center gap-2 ${selected === category.label ? 'bg-white/10' : ''
+                  }`}
                 onClick={() => {
                   onChange(category.label);
                   setIsOpen(false);
@@ -219,24 +218,24 @@ export const CreatePostForm = memo(({ onSubmit, loading = false }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!title.trim()) {
       setError('Vui lòng nhập tiêu đề bài viết');
       return;
     }
-    
+
     if (!content.trim()) {
       setError('Vui lòng nhập nội dung bài viết');
       return;
     }
-    
+
     if (!category) {
       setError('Vui lòng chọn danh mục');
       return;
     }
-    
+
     setError('');
-    
+
     onSubmit({
       title,
       content,
@@ -252,7 +251,7 @@ export const CreatePostForm = memo(({ onSubmit, loading = false }) => {
           {error}
         </div>
       )}
-      
+
       <div>
         <label htmlFor="post-title" className="block text-sm font-medium text-gray-300 mb-2 tracking-vn-tight">
           Tiêu đề bài viết
@@ -267,41 +266,41 @@ export const CreatePostForm = memo(({ onSubmit, loading = false }) => {
           required
         />
       </div>
-      
+
       <div>
         <label htmlFor="post-category" className="block text-sm font-medium text-gray-300 mb-2 tracking-vn-tight">
           Danh mục
         </label>
-        <CategorySelect 
-          categories={categories} 
-          selected={category} 
-          onChange={setCategory} 
+        <CategorySelect
+          categories={categories}
+          selected={category}
+          onChange={setCategory}
         />
       </div>
-      
+
       <div>
         <label htmlFor="post-content" className="block text-sm font-medium text-gray-300 mb-2 tracking-vn-tight">
           Nội dung bài viết
         </label>
-        <RichTextEditor 
-          value={content} 
-          onChange={setContent} 
+        <RichTextEditor
+          value={content}
+          onChange={setContent}
         />
       </div>
-      
+
       <div>
         <label htmlFor="post-tags" className="block text-sm font-medium text-gray-300 mb-2 tracking-vn-tight">
           Thẻ (tối đa 5 thẻ)
         </label>
-        <TagInput 
-          tags={tags} 
-          setTags={setTags} 
+        <TagInput
+          tags={tags}
+          setTags={setTags}
         />
         <p className="mt-1 text-xs text-gray-400 tracking-vn-tight">
           Thêm các thẻ để giúp người khác tìm thấy bài viết của bạn dễ dàng hơn
         </p>
       </div>
-      
+
       <div className="flex justify-end">
         <button
           type="submit"
@@ -354,24 +353,24 @@ export const EditPostForm = memo(({ initialData, onSubmit, loading = false }) =>
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!title.trim()) {
       setError('Vui lòng nhập tiêu đề bài viết');
       return;
     }
-    
+
     if (!content.trim()) {
       setError('Vui lòng nhập nội dung bài viết');
       return;
     }
-    
+
     if (!category) {
       setError('Vui lòng chọn danh mục');
       return;
     }
-    
+
     setError('');
-    
+
     onSubmit({
       title,
       content,
@@ -387,7 +386,7 @@ export const EditPostForm = memo(({ initialData, onSubmit, loading = false }) =>
           {error}
         </div>
       )}
-      
+
       <div>
         <label htmlFor="post-title" className="block text-sm font-medium text-gray-300 mb-2 tracking-vn-tight">
           Tiêu đề bài viết
@@ -402,41 +401,41 @@ export const EditPostForm = memo(({ initialData, onSubmit, loading = false }) =>
           required
         />
       </div>
-      
+
       <div>
         <label htmlFor="post-category" className="block text-sm font-medium text-gray-300 mb-2 tracking-vn-tight">
           Danh mục
         </label>
-        <CategorySelect 
-          categories={categories} 
-          selected={category} 
-          onChange={setCategory} 
+        <CategorySelect
+          categories={categories}
+          selected={category}
+          onChange={setCategory}
         />
       </div>
-      
+
       <div>
         <label htmlFor="post-content" className="block text-sm font-medium text-gray-300 mb-2 tracking-vn-tight">
           Nội dung bài viết
         </label>
-        <RichTextEditor 
-          value={content} 
-          onChange={setContent} 
+        <RichTextEditor
+          value={content}
+          onChange={setContent}
         />
       </div>
-      
+
       <div>
         <label htmlFor="post-tags" className="block text-sm font-medium text-gray-300 mb-2 tracking-vn-tight">
           Thẻ (tối đa 5 thẻ)
         </label>
-        <TagInput 
-          tags={tags} 
-          setTags={setTags} 
+        <TagInput
+          tags={tags}
+          setTags={setTags}
         />
         <p className="mt-1 text-xs text-gray-400 tracking-vn-tight">
           Thêm các thẻ để giúp người khác tìm thấy bài viết của bạn dễ dàng hơn
         </p>
       </div>
-      
+
       <div className="flex justify-end space-x-4">
         <button
           type="button"
@@ -473,20 +472,20 @@ export const EditPostForm = memo(({ initialData, onSubmit, loading = false }) =>
 // Comment Form
 export const CommentForm = memo(({ onSubmit, loading = false, replyTo = null }) => {
   const [content, setContent] = useState('');
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!content.trim()) return;
-    
+
     onSubmit({
       content,
       replyTo
     });
-    
+
     setContent('');
   };
-  
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -504,7 +503,7 @@ export const CommentForm = memo(({ onSubmit, loading = false, replyTo = null }) 
           required
         />
       </div>
-      
+
       <div className="flex justify-end">
         {replyTo && (
           <button
@@ -518,9 +517,8 @@ export const CommentForm = memo(({ onSubmit, loading = false, replyTo = null }) 
         <button
           type="submit"
           disabled={loading || !content.trim()}
-          className={`py-2 px-4 rounded-lg bg-gradient-to-r from-[#8a2be2] to-[#9370db] text-white text-sm font-medium hover:shadow-lg hover:shadow-[#9370db]/20 transition-all relative overflow-hidden group ${
-            loading || !content.trim() ? 'opacity-70 cursor-not-allowed' : ''
-          }`}
+          className={`py-2 px-4 rounded-lg bg-gradient-to-r from-[#8a2be2] to-[#9370db] text-white text-sm font-medium hover:shadow-lg hover:shadow-[#9370db]/20 transition-all relative overflow-hidden group ${loading || !content.trim() ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
         >
           <span className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
           <span className="relative z-10 flex items-center justify-center tracking-vn-tight">
@@ -543,14 +541,14 @@ export const CommentForm = memo(({ onSubmit, loading = false, replyTo = null }) 
 
 // Comment Component
 export const Comment = memo(({ comment, onReply, onLike, currentUser, isReply = false }) => {
-  const [showReplies, setShowReplies] = useState(true);
-  
+  const [showReplies, setShowReplies] = useState(false);
+
   return (
     <div className={`${isReply ? 'pl-6 border-l border-white/10 mt-4' : 'border-b border-white/10 py-4'}`}>
       <div className="flex gap-3">
-        <img 
-          src={comment.author.avatar} 
-          alt={comment.author.name} 
+        <img
+          src={comment.author.avatar}
+          alt={comment.author.name}
           className="w-10 h-10 rounded-full object-cover border-2 border-[#9370db]"
           onError={(e) => {
             e.target.src = "https://via.placeholder.com/40x40?text=User";
@@ -568,11 +566,10 @@ export const Comment = memo(({ comment, onReply, onLike, currentUser, isReply = 
           </div>
           <p className="text-gray-300 tracking-vn-tight leading-vn mb-3">{comment.content}</p>
           <div className="flex items-center gap-4 text-sm">
-            <button 
+            <button
               onClick={() => onLike(comment.id)}
-              className={`flex items-center gap-1 hover:text-[#9370db] transition-colors ${
-                comment.liked ? 'text-[#9370db]' : 'text-gray-400'
-              }`}
+              className={`flex items-center gap-1 hover:text-[#9370db] transition-colors ${comment.liked ? 'text-[#9370db]' : 'text-gray-400'
+                }`}
             >
               <Icon
                 name="Heart"
@@ -581,7 +578,7 @@ export const Comment = memo(({ comment, onReply, onLike, currentUser, isReply = 
               />
               <span>{comment.likes}</span>
             </button>
-            <button 
+            <button
               onClick={() => onReply(comment)}
               className="flex items-center gap-1 text-gray-400 hover:text-[#9370db] transition-colors"
             >
@@ -591,7 +588,7 @@ export const Comment = memo(({ comment, onReply, onLike, currentUser, isReply = 
           </div>
         </div>
       </div>
-      
+
       {comment.replies && comment.replies.length > 0 && (
         <div className="mt-4">
           <button
@@ -601,7 +598,7 @@ export const Comment = memo(({ comment, onReply, onLike, currentUser, isReply = 
             <Icon name={showReplies ? "ChevronDown" : "ChevronRight"} size="sm" />
             <span>{showReplies ? 'Ẩn' : 'Hiện'} {comment.replies.length} trả lời</span>
           </button>
-          
+
           {showReplies && (
             <div className="space-y-4">
               {comment.replies.map((reply) => (
@@ -623,12 +620,12 @@ export const Comment = memo(({ comment, onReply, onLike, currentUser, isReply = 
 });
 
 // Post Detail Component
-export const PostDetail = memo(({ 
-  post, 
-  onLike, 
-  onComment, 
-  onReply, 
-  onLikeComment, 
+export const PostDetail = memo(({
+  post,
+  onLike,
+  onComment,
+  onReply,
+  onLikeComment,
   currentUser = null,
   loading = {
     likeLoading: false,
@@ -636,13 +633,13 @@ export const PostDetail = memo(({
   }
 }) => {
   const [replyingTo, setReplyingTo] = useState(null);
-  
+
   const handleCommentSubmit = (data) => {
     if (data.cancelReply) {
       setReplyingTo(null);
       return;
     }
-    
+
     if (replyingTo) {
       onReply(data, replyingTo);
       setReplyingTo(null);
@@ -650,13 +647,13 @@ export const PostDetail = memo(({
       onComment(data);
     }
   };
-  
+
   const handleReply = (comment) => {
     setReplyingTo(comment);
     // Scroll to comment form
     document.getElementById('comment-form').scrollIntoView({ behavior: 'smooth' });
   };
-  
+
   return (
     <div className="space-y-8">
       {/* Post Header */}
@@ -676,14 +673,14 @@ export const PostDetail = memo(({
             </span>
           )}
         </div>
-        
+
         <h1 className="text-2xl md:text-3xl font-bold mb-4 text-white tracking-vn-tight">{post.title}</h1>
-        
+
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <img 
-              src={post.author.avatar} 
-              alt={post.author.name} 
+            <img
+              src={post.author.avatar}
+              alt={post.author.name}
               className="w-10 h-10 rounded-full object-cover border-2 border-[#9370db]"
               onError={(e) => {
                 e.target.src = "https://via.placeholder.com/40x40?text=User";
@@ -694,14 +691,13 @@ export const PostDetail = memo(({
               <p className="text-xs text-gray-400 tracking-vn-tight">Đăng lúc {post.createdAt}</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => onLike(post.id)}
               disabled={loading.likeLoading}
-              className={`flex items-center gap-1 hover:text-[#9370db] transition-colors ${
-                post.liked ? 'text-[#9370db]' : 'text-gray-400'
-              }`}
+              className={`flex items-center gap-1 hover:text-[#9370db] transition-colors ${post.liked ? 'text-[#9370db]' : 'text-gray-400'
+                }`}
             >
               {loading.likeLoading ? (
                 <Icon name="Loader2" size="sm" className="animate-spin" />
@@ -716,7 +712,7 @@ export const PostDetail = memo(({
             </div>
           </div>
         </div>
-        
+
         <div className="flex flex-wrap gap-2 mb-6">
           {post.tags.map((tag, index) => (
             <span key={index} className="bg-[#2a1045] text-gray-300 px-2 py-1 rounded-full text-xs tracking-vn-tight">
@@ -725,31 +721,31 @@ export const PostDetail = memo(({
           ))}
         </div>
       </div>
-      
+
       {/* Post Content */}
       <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 rounded-xl p-6">
         <div className="prose prose-invert max-w-none tracking-vn-tight leading-vn">
           {post.content}
         </div>
       </div>
-      
+
       {/* Comments Section */}
       <div>
         <h2 className="text-xl font-bold mb-6 text-white tracking-vn-tight">
           Bình luận ({post.comments?.length || 0})
         </h2>
-        
+
         <div id="comment-form" className="bg-white/5 backdrop-blur-sm border border-purple-900/20 rounded-xl p-6 mb-8">
           <h3 className="text-lg font-medium mb-4 text-white tracking-vn-tight">
             {replyingTo ? 'Trả lời bình luận' : 'Thêm bình luận'}
           </h3>
-          <CommentForm 
-            onSubmit={handleCommentSubmit} 
-            loading={loading.commentLoading} 
+          <CommentForm
+            onSubmit={handleCommentSubmit}
+            loading={loading.commentLoading}
             replyTo={replyingTo}
           />
         </div>
-        
+
         {post.comments && post.comments.length > 0 ? (
           <div className="space-y-0">
             {post.comments.map((comment) => (
@@ -764,10 +760,10 @@ export const PostDetail = memo(({
           </div>
         ) : (
           <div className="text-center py-12 bg-white/5 backdrop-blur-sm border border-purple-900/20 rounded-xl">
-            <Icon 
-              name="MessageCircle" 
-              size="xl" 
-              className="mx-auto text-gray-400 mb-4" 
+            <Icon
+              name="MessageCircle"
+              size="xl"
+              className="mx-auto text-gray-400 mb-4"
             />
             <p className="text-lg text-gray-400 tracking-vn-tight">
               Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
@@ -783,27 +779,27 @@ export const PostDetail = memo(({
 const getCategoryColor = (category) => {
   switch (category) {
     case 'Thảo luận':
-      return { 
+      return {
         text: 'text-blue-400',
         bg: 'bg-blue-500/20'
       };
     case 'Chia sẻ':
-      return { 
+      return {
         text: 'text-green-400',
         bg: 'bg-green-500/20'
       };
     case 'Câu hỏi':
-      return { 
+      return {
         text: 'text-yellow-400',
         bg: 'bg-yellow-500/20'
       };
     case 'Hướng dẫn':
-      return { 
+      return {
         text: 'text-purple-400',
         bg: 'bg-purple-500/20'
       };
     default:
-      return { 
+      return {
         text: 'text-gray-400',
         bg: 'bg-gray-500/20'
       };

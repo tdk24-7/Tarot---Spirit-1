@@ -244,13 +244,29 @@ const ReadingDetailPage = () => {
 
                 <div className="prose prose-invert max-w-none">
                   <p className="text-gray-300 leading-relaxed tracking-vn-tight">
-                    {/* If there's an AI-generated interpretation, show it here */}
-                    {reading.combined_interpretation || reading.interpretation ||
-                      `Dựa trên các lá bài xuất hiện trong trải bài của bạn, có thể thấy rằng bạn đang ở một giai đoạn quan trọng trong cuộc sống. 
-                     
-                     Các lá bài này gợi ý rằng bạn nên tin tưởng vào trực giác của mình và tiếp tục con đường đã chọn. Những thử thách hiện tại chỉ là tạm thời, và với quyết tâm và kiên nhẫn, bạn sẽ vượt qua được chúng.
-                     
-                     Hãy dành thời gian để suy ngẫm về những gì thực sự quan trọng đối với bạn và đừng ngần ngại thay đổi hướng đi nếu cần thiết. Năng lượng của các lá bài cho thấy thời điểm này rất thuận lợi để bạn theo đuổi mục tiêu của mình.`}
+                    {/* Logic phân tích JSON content từ AI */}
+                    {(() => {
+                      try {
+                        let content = reading.combined_interpretation || reading.interpretation;
+                        // Nếu là JSON string thì parse
+                        if (typeof content === 'string' && (content.trim().startsWith('{') || content.trim().startsWith('['))) {
+                          const json = JSON.parse(content);
+                          return (
+                            <div className="space-y-4">
+                              {json.dailyMessage && <div><h4 className="text-[#9370db] font-bold">Thông điệp chung</h4><p>{json.dailyMessage}</p></div>}
+                              {json.loveMessage && <div><h4 className="text-[#9370db] font-bold">Tình yêu</h4><p>{json.loveMessage}</p></div>}
+                              {json.careerMessage && <div><h4 className="text-[#9370db] font-bold">Sự nghiệp</h4><p>{json.careerMessage}</p></div>}
+                              {json.healthMessage && <div><h4 className="text-[#9370db] font-bold">Sức khỏe</h4><p>{json.healthMessage}</p></div>}
+                              {!json.dailyMessage && !json.loveMessage && <p>{content}</p>}
+                            </div>
+                          );
+                        }
+                        // Nếu không phải JSON hoặc lỗi parse
+                        return content || `Dựa trên các lá bài xuất hiện trong trải bài của bạn...`;
+                      } catch (e) {
+                        return reading.combined_interpretation || reading.interpretation || `Dựa trên các lá bài xuất hiện...`;
+                      }
+                    })()}
                   </p>
                 </div>
               </div>

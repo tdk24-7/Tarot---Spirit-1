@@ -138,12 +138,13 @@ const tarotService = {
    * Fetch user's saved readings
    * @param {number} page - Page number for pagination
    * @param {number} limit - Number of readings per page
+   * @param {Object} filters - Optional filters like { type: 'daily' }
    * @returns {Promise<Object>} Object containing user's reading history and pagination info
    */
-  getUserReadings: async (page = 1, limit = 10) => {
+  getUserReadings: async (page = 1, limit = 10, filters = {}) => {
     try {
       const response = await apiClient.get('/tarot/readings', {
-        params: { page, limit }
+        params: { page, limit, ...filters }
       })
       return response.data
     } catch (error) {

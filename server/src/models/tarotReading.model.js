@@ -36,6 +36,11 @@ module.exports = (sequelize, Sequelize) => {
     interpretation_source: {
       type: Sequelize.ENUM('Normal', 'AI'),
       defaultValue: 'Normal'
+    },
+    type: {
+      type: Sequelize.STRING(50),
+      allowNull: true,
+      defaultValue: 'standard' // 'standard', 'daily', etc.
     }
   }, {
     tableName: 'tarot_readings',

@@ -49,8 +49,8 @@ const CategoryButton = memo(({ label, active, onClick }) => (
   </button>
 ));
 
-const ForumPostCard = memo(({ title, author, date, category, excerpt, likes, comments, tags, isHot = false, isFeatured = false }) => {
-  const postLink = path.PUBLIC.FORUM_POST.replace(':postId', category === 'Câu hỏi' ? '1' : '2');
+const ForumPostCard = memo(({ id, title, author, date, category, excerpt, likes, comments, tags, isHot = false, isFeatured = false }) => {
+  const postLink = path.PUBLIC.FORUM_POST.replace(':postId', id);
 
   return (
     <div className={`bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:bg-white/10 border ${isFeatured ? 'border-[#9370db]' : 'border-purple-900/20'}`}>
@@ -131,7 +131,7 @@ const ForumPostCard = memo(({ title, author, date, category, excerpt, likes, com
 const TrendingTopicCard = memo(({ title, posts, isActive = false }) => (
   <div className={`p-4 rounded-xl transition-all ${isActive ? 'bg-[#9370db]/20 border border-[#9370db]/40' : 'bg-white/5 hover:bg-white/10 border border-purple-900/20'}`}>
     <h3 className={`text-lg font-bold mb-2 tracking-vn-tight ${isActive ? 'text-[#9370db]' : 'text-white'}`}>{title}</h3>
-    <p className="text-gray-400 text-sm tracking-vn-tight">{posts} bài viết</p>
+    <p className="text-gray-400 text-sm tracking-vn-tight">{posts} lượt xem</p>
   </div>
 ));
 
@@ -194,6 +194,9 @@ const getTagColor = (category) => {
 };
 
 const ForumPage = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   // Categories
   const categories = [
     { id: 'all', label: 'Tất cả' },
@@ -203,11 +206,7 @@ const ForumPage = () => {
     { id: 'Hướng dẫn', label: 'Hướng dẫn' }
   ];
 
-  // Hardcode Trending Topics & Contributors for now (avoid overengineering)
-  const trendingTopics = [
-    { id: 1, title: 'Bài Tarot cho người mới', posts: 27, isActive: true },
-    { id: 2, title: 'Ý nghĩa các lá bài Major Arcana', posts: 19 }
-  ];
+  // Hardcode Contributors for now (avoid overengineering)
 
   const topContributors = [
     { rank: 1, user: 'Admin', posts: 999, avatar: 'https://placehold.co/40x40/9370db/ffffff?text=A' }
@@ -217,6 +216,11 @@ const ForumPage = () => {
   const [forumPosts, setForumPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ total: 0, count: 0 });
+
+  // State for filters and pagination
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch posts
   useEffect(() => {
@@ -265,6 +269,32 @@ const ForumPage = () => {
     return () => clearTimeout(timer);
 
   }, [activeCategory, searchTerm, currentPage]);
+
+  const [trendingTopics, setTrendingTopics] = useState([]);
+
+  useEffect(() => {
+    const fetchTrending = async () => {
+      try {
+        const response = await forumService.getPosts({
+          limit: 5,
+          sortBy: 'views',
+          sortOrder: 'desc'
+        });
+        if (response && response.status === 'success') {
+          const mappedTrending = response.data.posts.map(post => ({
+            id: post.id,
+            title: post.title,
+            posts: post.views, // Using views as a proxy for "activity" for now
+            isActive: false // UI state
+          }));
+          setTrendingTopics(mappedTrending);
+        }
+      } catch (err) {
+        console.error("Failed to fetch trending topics", err);
+      }
+    };
+    fetchTrending();
+  }, []);
 
   // Use API posts, no need to filter locally again since API does it
   const filteredPosts = forumPosts;
@@ -370,6 +400,7 @@ const ForumPage = () => {
                 filteredPosts.map(post => (
                   <ForumPostCard
                     key={post.id}
+                    id={post.id}
                     title={post.title}
                     author={post.author}
                     date={post.date}

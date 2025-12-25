@@ -28,12 +28,21 @@ const JournalForm = ({ initialData, readingId, isEditing = false }) => {
     setLoading(true);
     setError(null);
 
+    // Prepare data for API
+    const submissionData = {
+      ...formData,
+      // Convert tags string to array if it is a string
+      tags: typeof formData.tags === 'string'
+        ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
+        : (Array.isArray(formData.tags) ? formData.tags : [])
+    };
+
     try {
       if (isEditing) {
-        await updateJournal(initialData.id, formData);
+        await updateJournal(initialData.id, submissionData);
         navigate(`/journal/${initialData.id}`);
       } else {
-        const result = await createJournal(formData);
+        const result = await createJournal(submissionData);
         navigate(`/journal/${result.id}`);
       }
     } catch (err) {
@@ -88,15 +97,22 @@ const JournalForm = ({ initialData, readingId, isEditing = false }) => {
           <label htmlFor="mood" className="block text-white font-medium mb-2">
             Tâm trạng
           </label>
-          <input
-            type="text"
+          <select
             id="mood"
             name="mood"
             value={formData.mood}
             onChange={handleChange}
             className="w-full px-4 py-2 rounded-lg bg-white/5 border border-purple-900/30 text-white focus:border-[#9370db] focus:outline-none focus:ring-1 focus:ring-[#9370db]"
-            placeholder="Vui vẻ, Trầm tư, Hào hứng..."
-          />
+          >
+            <option value="" className="bg-[#1a0933]">Chọn tâm trạng...</option>
+            <option value="happy" className="bg-[#1a0933]">Vui vẻ</option>
+            <option value="excited" className="bg-[#1a0933]">Hào hứng</option>
+            <option value="calm" className="bg-[#1a0933]">Bình yên</option>
+            <option value="neutral" className="bg-[#1a0933]">Bình thường</option>
+            <option value="sad" className="bg-[#1a0933]">Buồn bã</option>
+            <option value="anxious" className="bg-[#1a0933]">Lo lắng</option>
+            <option value="confused" className="bg-[#1a0933]">Bối rối</option>
+          </select>
         </div>
 
         <div>

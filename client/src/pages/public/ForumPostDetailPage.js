@@ -6,6 +6,7 @@ import { PostDetail } from '../../features/forum/ForumComponents';
 import { Icon } from '../../shared/components/common';
 import { path } from '../../shared/utils/routes';
 import { useAuth } from '../../features/auth/hook/useAuth';
+import forumService from '../../features/forum/services/forum.service';
 
 // Decorative Elements
 const MysticBackground = memo(() => (
@@ -29,7 +30,7 @@ const AuthPrompt = memo(() => (
       Bạn cần đăng nhập hoặc đăng ký tài khoản để có thể bình luận và tham gia thảo luận với cộng đồng.
     </p>
     <div className="flex flex-wrap gap-3">
-      <Link 
+      <Link
         to={path.AUTH.LOGIN}
         state={{ from: window.location.pathname }}
         className="bg-gradient-to-r from-[#9370db] to-[#8a2be2] text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-all tracking-vn-tight"
@@ -129,155 +130,248 @@ const ForumPostDetailPage = () => {
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    // Simulate API call to fetch post details
     const fetchPost = async () => {
-      setLoading(prev => ({ ...prev, pageLoading: true }));
-      
-      // In a real app, this would be an API call using the postId
-      setTimeout(() => {
-        setPost(getDummyPost());
+      try {
+        setLoading(prev => ({ ...prev, pageLoading: true }));
+        const response = await forumService.getPost(postId);
+        if (response && response.status === 'success') {
+          // Map API data to UI format
+          const apiPost = response.data.post;
+          const mappedPost = {
+            id: apiPost.id,
+            title: apiPost.title,
+            author: {
+              name: apiPost.author.username || 'Unknown',
+              avatar: 'https://placehold.co/40x40/9370db/ffffff?text=' + (apiPost.author.username?.charAt(0) || 'U')
+            },
+            createdAt: apiPost.createdAt, // Assuming formatted string from backend or adjust date here
+            category: apiPost.category,
+            content: apiPost.content,
+            excerpt: apiPost.content.substring(0, 100) + '...',
+            likes: apiPost.likes,
+            liked: false, // Need to check if current user liked it, backend should ideally return this
+            comments: apiPost.comments.map(c => ({
+              id: c.id,
+              content: c.content,
+              author: {
+                name: c.author?.username || 'User',
+                avatar: 'https://placehold.co/40x40/9370db/ffffff?text=' + (c.author?.username?.charAt(0) || 'U'),
+                isOP: c.author?.id === apiPost.author.id
+              },
+              createdAt: c.createdAt,
+              likes: c.likes || 0,
+              liked: false,
+              replies: c.replies ? c.replies.map(r => ({
+                id: r.id,
+                content: r.content,
+                author: {
+                  name: r.author?.username || 'User',
+                  avatar: 'https://placehold.co/40x40/9370db/ffffff?text=' + (r.author?.username?.charAt(0) || 'U'),
+                  isOP: r.author?.id === apiPost.author.id
+                },
+                createdAt: r.createdAt,
+                likes: r.likes || 0,
+                liked: false
+              })) : []
+            })),
+            tags: apiPost.tags || [],
+            isHot: apiPost.likes > 20,
+            isFeatured: apiPost.isPinned
+          };
+          setPost(mappedPost);
+        } else {
+          // Handle explicit error status
+          console.error("Failed to load post");
+        }
+      } catch (err) {
+        console.error("Error fetching post:", err);
+      } finally {
         setLoading(prev => ({ ...prev, pageLoading: false }));
-      }, 800);
+      }
     };
-    
-    fetchPost();
+
+    if (postId) {
+      fetchPost();
+    }
   }, [postId]);
 
   const handleLike = async (id) => {
-    // Require authentication to like posts
     if (!isAuthenticated) {
       navigate(path.AUTH.LOGIN, { state: { from: window.location.pathname, message: 'Vui lòng đăng nhập để thích bài viết' } });
       return;
     }
-    
+
     setLoading(prev => ({ ...prev, likeLoading: true }));
-    
-    // Simulate API call
-    setTimeout(() => {
-      setPost(prev => ({
-        ...prev,
-        liked: !prev.liked,
-        likes: prev.liked ? prev.likes - 1 : prev.likes + 1
-      }));
+    try {
+      const response = await forumService.likePost(id);
+      if (response && response.status === 'success') {
+        setPost(prev => ({
+          ...prev,
+          liked: !prev.liked,
+          likes: prev.liked ? prev.likes - 1 : prev.likes + 1
+        }));
+      }
+    } catch (err) {
+      console.error("Error liking post:", err);
+    } finally {
       setLoading(prev => ({ ...prev, likeLoading: false }));
-    }, 500);
+    }
   };
 
   const handleComment = async (data) => {
-    // Require authentication to comment
     if (!isAuthenticated) {
       navigate(path.AUTH.LOGIN, { state: { from: window.location.pathname, message: 'Vui lòng đăng nhập để bình luận' } });
       return;
     }
-    
+
     setLoading(prev => ({ ...prev, commentLoading: true }));
-    
-    // Simulate API call
-    setTimeout(() => {
-      const newComment = {
-        id: Date.now(),
-        content: data.content,
-        author: currentUser,
-        createdAt: new Date().toLocaleString('vi-VN'),
-        likes: 0,
-        liked: false,
-        replies: []
-      };
-      
-      setPost(prev => ({
-        ...prev,
-        comments: [...prev.comments, newComment]
-      }));
-      
+    try {
+      const response = await forumService.createComment(post.id, { content: data.content });
+      if (response && response.status === 'success') {
+        // Optimistically add comment or refetch. Optimistic update:
+        // We'd ideally need the full user object and real ID from response.
+        const newComment = {
+          id: response.data?.comment?.id || Date.now(),
+          content: data.content,
+          author: {
+            name: 'You', // Or get from auth context
+            avatar: 'https://placehold.co/40x40/9370db/ffffff?text=Y',
+            isOP: false // Check against post author ID
+          },
+          createdAt: 'Just now',
+          likes: 0,
+          liked: false,
+          replies: []
+        };
+        setPost(prev => ({
+          ...prev,
+          comments: [newComment, ...prev.comments] // Add to top
+        }));
+      }
+    } catch (err) {
+      console.error("Error commenting:", err);
+    } finally {
       setLoading(prev => ({ ...prev, commentLoading: false }));
-    }, 800);
+    }
   };
 
   const handleReply = async (data, replyTo) => {
-    // Require authentication to reply
     if (!isAuthenticated) {
       navigate(path.AUTH.LOGIN, { state: { from: window.location.pathname, message: 'Vui lòng đăng nhập để trả lời bình luận' } });
       return;
     }
-    
+
     setLoading(prev => ({ ...prev, commentLoading: true }));
-    
-    // Simulate API call
-    setTimeout(() => {
-      const newReply = {
-        id: Date.now(),
+
+    // Find absolute root parent
+    let rootCommentId = replyTo.id;
+    let isNested = false;
+
+    // Check if replyTo is actually a nested reply inside a root comment
+    const rootParent = post.comments.find(c =>
+      c.replies && c.replies.some(r => r.id === replyTo.id)
+    );
+
+    if (rootParent) {
+      rootCommentId = rootParent.id;
+      isNested = true;
+    }
+
+    try {
+      // If replying to a nested comment, effectively reply to the root, but maybe add tag in content if desired.
+      // For now, simpler approach: just link to root.
+      const response = await forumService.createComment(post.id, {
         content: data.content,
-        author: currentUser,
-        createdAt: new Date().toLocaleString('vi-VN'),
-        likes: 0,
-        liked: false
-      };
-      
-      setPost(prev => {
-        return {
-          ...prev,
-          comments: prev.comments.map(comment => {
-            if (comment.id === replyTo.id) {
-              return {
-                ...comment,
-                replies: [...(comment.replies || []), newReply]
-              };
-            }
-            return comment;
-          })
-        };
+        parentCommentId: rootCommentId
       });
-      
+
+      if (response && response.status === 'success') {
+        // Optimistic update
+        const newReply = {
+          id: response.data?.comment?.id || Date.now(),
+          content: data.content,
+          author: {
+            name: currentUser.name || 'User', // Fallback
+            avatar: currentUser.avatar || 'https://placehold.co/40x40/9370db/ffffff?text=U',
+            isOP: false
+          },
+          createdAt: 'Just now',
+          likes: 0,
+          liked: false
+        };
+
+        setPost(prev => {
+          return {
+            ...prev,
+            comments: prev.comments.map(comment => {
+              if (comment.id === rootCommentId) {
+                return {
+                  ...comment,
+                  replies: [...(comment.replies || []), newReply]
+                };
+              }
+              return comment;
+            })
+          };
+        });
+      }
+    } catch (err) {
+      console.error("Error replying:", err);
+    } finally {
       setLoading(prev => ({ ...prev, commentLoading: false }));
-    }, 800);
+    }
   };
 
   const handleLikeComment = async (commentId) => {
-    // Require authentication to like comments
     if (!isAuthenticated) {
       navigate(path.AUTH.LOGIN, { state: { from: window.location.pathname, message: 'Vui lòng đăng nhập để thích bình luận' } });
       return;
     }
-    
-    // Simulate API call
-    setTimeout(() => {
-      setPost(prev => {
-        // Helper function to update comment or reply
-        const updateItem = (item) => {
-          if (item.id === commentId) {
-            return {
-              ...item,
-              liked: !item.liked,
-              likes: item.liked ? item.likes - 1 : item.likes + 1
-            };
-          }
-          return item;
-        };
-        
-        // Check if it's a top-level comment
-        const updatedComments = prev.comments.map(comment => {
-          // Check if this is the comment to update
-          if (comment.id === commentId) {
-            return updateItem(comment);
-          }
-          
-          // Check if it's in the replies
-          if (comment.replies && comment.replies.length > 0) {
-            return {
-              ...comment,
-              replies: comment.replies.map(reply => updateItem(reply))
-            };
-          }
-          
-          return comment;
+
+    // API call for like comment
+    try {
+      const response = await forumService.likeComment(commentId);
+      if (response && response.status === 'success') {
+        const { likesCount, liked } = response.data;
+
+        setPost(prev => {
+          // Helper function to update comment or reply
+          const updateItem = (item) => {
+            if (item.id === commentId) {
+              return {
+                ...item,
+                liked: liked,
+                likes: likesCount
+              };
+            }
+            return item;
+          };
+
+          // Re-map comments to find and update the target
+          const updatedComments = prev.comments.map(comment => {
+            if (comment.id === commentId) {
+              return updateItem(comment);
+            }
+
+            if (comment.replies && comment.replies.length > 0) {
+              return {
+                ...comment,
+                replies: comment.replies.map(reply => updateItem(reply))
+              };
+            }
+
+            return comment;
+          });
+
+          return {
+            ...prev,
+            comments: updatedComments
+          };
         });
-        
-        return {
-          ...prev,
-          comments: updatedComments
-        };
-      });
-    }, 300);
+      }
+    } catch (err) {
+      console.error("Error liking comment:", err);
+    }
   };
 
   if (loading.pageLoading) {
@@ -324,8 +418,17 @@ const ForumPostDetailPage = () => {
         <title>{post.title} | Diễn Đàn Tarot</title>
         <meta name="description" content={post.excerpt} />
       </Helmet>
-      
+
       <ForumLayout>
+        <div className="mb-6">
+          <button
+            onClick={() => navigate(path.PUBLIC.FORUM)}
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-[#9370db] transition-colors tracking-vn-tight"
+          >
+            <Icon name="ArrowLeft" size="sm" />
+            Quay lại diễn đàn
+          </button>
+        </div>
         <PostDetail
           post={post}
           onLike={handleLike}
@@ -338,19 +441,10 @@ const ForumPostDetailPage = () => {
             commentLoading: loading.commentLoading
           }}
         />
-        
+
         {/* Authentication Prompt */}
         {!isAuthenticated && <AuthPrompt />}
-        
-        <div className="mt-8 flex justify-between items-center">
-          <button 
-            onClick={() => navigate(path.PUBLIC.FORUM)}
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-[#9370db] transition-colors tracking-vn-tight"
-          >
-            <Icon name="ArrowLeft" size="sm" />
-            Quay lại diễn đàn
-          </button>
-        </div>
+
       </ForumLayout>
     </>
   );

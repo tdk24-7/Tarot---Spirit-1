@@ -14,31 +14,34 @@ try {
 }
 
 // Export trực tiếp từ file auth.middleware.js
-const { authenticateJWT, isAdmin, restrictTo } = authMiddleware;
+const { authenticateJWT, authenticateOptional, isAdmin, restrictTo } = authMiddleware;
 
 // Export cho file auth.js (legacy)
 const auth = {
   authenticate: authenticateJWT,
+  authenticateOptional,
   restrictTo
 };
 
 // Export cho file authJwt.js (legacy)
 const authJwt = {
   verifyToken: authenticateJWT,
+  authenticateOptional,
   isAdmin
 };
- 
+
 module.exports = {
   // Middleware mới - nên sử dụng
   authMiddleware,
   authenticateJWT,
+  authenticateOptional,
   isAdmin,
   restrictTo,
-  
+
   // Legacy exports - chỉ để tương thích ngược
   auth,
   authJwt,
-  
+
   // Nếu validator tồn tại
   ...(validator ? { validator } : {})
 }; 

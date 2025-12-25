@@ -170,36 +170,44 @@ const DailyTarotPage = () => {
   const [history, setHistory] = useState([]);
 
   // Fetch data
+  // Fetch data
+  const fetchingRef = React.useRef(false); // Ref to prevent double fetch in StrictMode
+
   useEffect(() => {
     const fetchData = async () => {
+      // Prevent race conditions / double fetch
+      if (fetchingRef.current) return;
+      fetchingRef.current = true;
+
       try {
         setIsLoading(true);
         // 1. Fetch Daily Card Logic
-        // For now, we simulate fetching or use the /daily endpoint if backend supports rotation.
-        // The controller has getDailyCard!
         const cardResponse = await tarotService.getDailyCard();
+        console.log('Daily Card Response:', cardResponse); // Debug Log
+
         if (cardResponse && cardResponse.data) {
-          // Backend returns { card: ..., interpretation: ... } 
-          // Need to map to UI structure
           const c = cardResponse.data.card;
+          const imageSrc = c.image_url || c.imageUrl || c.imageSrc; // multiple fallback
+          console.log('Daily Card Image:', imageSrc); // Debug Log
+
           setDailyCard({
             id: c.id,
             name: c.name,
             vietnameseName: c.vietnameseName || c.name,
-            imageSrc: c.image_url || c.imageUrl,
+            imageSrc: imageSrc,
             category: c.type === 'major' ? 'Major Arcana' : c.suit,
             description: c.description || c.desc,
             keywords: c.keywords || [],
-            dailyMessage: cardResponse.data.interpretation || c.meaning_up,
-            loveMessage: c.meaning_up, // Fallback if BE interprets specific domains
-            careerMessage: c.meaning_rev, // Fallback
-            healthMessage: c.description // Fallback
+            dailyMessage: c.dailyMessage || cardResponse.data.interpretation || c.meaning_up,
+            loveMessage: c.loveMessage || c.meaning_up,
+            careerMessage: c.careerMessage || c.meaning_rev,
+            healthMessage: c.healthMessage || c.description
           });
         }
 
         // 2. Fetch History (User Diary)
         if (user) {
-          const historyResponse = await tarotService.getUserReadings(1, 5); // Filter by type='daily' if BE supports
+          const historyResponse = await tarotService.getUserReadings(1, 10, { type: 'daily' });
           if (historyResponse && historyResponse.data) {
             setHistory(historyResponse.data.readings);
           }
@@ -208,9 +216,22 @@ const DailyTarotPage = () => {
         console.error("Failed to fetch daily tarot data", err);
       } finally {
         setIsLoading(false);
+        // Do not reset fetchingRef to false immediately if you want to block StrictMode re-mount
+        // But for "User changes", we might want to reset. 
+        // For now, keep it simple. StrictMode unmounts and remounts, ref persists? No, ref persists instance. 
+        // Actually refs reset on remount if component is destroyed? No, StrictMode keeps state.
+        // Wait, if effect dependency [user] changes, we WANT to fetch again.
+        fetchingRef.current = false;
       }
     };
-    fetchData();
+
+    // Simple debounce/lock check
+    if (user && !fetchingRef.current) {
+      fetchData();
+    } else if (!user && !fetchingRef.current) {
+      // Guest mode fetch
+      fetchData();
+    }
   }, [user]);
 
   const handleCardClick = () => {
@@ -259,7 +280,7 @@ const DailyTarotPage = () => {
                 isFlipped={isCardFlipped}
                 isRevealed={isCardRevealed}
                 onClick={handleCardClick}
-                cardData={todayCard}
+                cardData={currentCard}
                 isLoading={isLoading}
               />
             </div>

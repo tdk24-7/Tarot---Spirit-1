@@ -21,8 +21,10 @@ const JournalDetailPage = () => {
   const fetchJournal = async () => {
     try {
       setLoading(true);
-      const data = await getJournalById(id);
-      setJournal(data);
+      const result = await getJournalById(id);
+      // Handle nested API response structure
+      const journalData = result.data?.journal || result.journal || result;
+      setJournal(journalData);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching journal:', err);
@@ -141,8 +143,8 @@ const JournalDetailPage = () => {
                   Tâm trạng: {journal.mood}
                 </div>
               )}
-              
-              {journal.tags && journal.tags.split(',').map((tag, index) => (
+
+              {journal.tags && (Array.isArray(journal.tags) ? journal.tags : (typeof journal.tags === 'string' ? journal.tags.split(',') : [])).map((tag, index) => (
                 <div key={index} className="bg-gray-800/80 text-gray-300 px-3 py-1 rounded-full">
                   #{tag.trim()}
                 </div>

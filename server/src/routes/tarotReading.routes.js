@@ -11,7 +11,7 @@ const tarotController = require('../controllers/tarot.controller');
 // Public routes - Move to top
 router.get('/cards', tarotController.getAllCards);
 router.get('/cards/:id', tarotController.getCardById);
-router.get('/daily', tarotController.getDailyCard);
+router.get('/daily', middleware.auth.authenticateOptional, tarotController.getDailyCard);
 router.post('/random', tarotController.getRandomCards);
 
 // TẠM THỜI BỎ QÁC ROUTE PHÍA DƯỚI ĐÂY - PHÁT TRIỂN CHỈ

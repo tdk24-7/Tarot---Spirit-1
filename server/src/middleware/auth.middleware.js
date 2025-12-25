@@ -102,8 +102,47 @@ const restrictTo = (...roles) => {
   };
 };
 
+/**
+ * Middleware xác thực JWT token (tùy chọn)
+ * Nếu có token hợp lệ -> gán req.user
+ * Nếu không có hoặc lỗi -> tiếp tục với req.user = undefined
+ */
+const authenticateOptional = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    let token;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+
+    if (!token) {
+      return next();
+    }
+
+    try {
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || 'tarot-system-secret-key'
+      );
+
+      const user = await User.findByPk(decoded.id);
+      if (user) {
+        req.user = user;
+      }
+      next();
+    } catch (error) {
+      // Token lỗi/hết hạn -> coi như guest
+      next();
+    }
+  } catch (error) {
+    next();
+  }
+};
+
 module.exports = {
   authenticateJWT,
+  authenticateOptional,
   isAdmin,
   restrictTo
 }; 
