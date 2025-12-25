@@ -37,31 +37,31 @@ export const login = async (email, password) => {
   if (USE_MOCK_API) {
     try {
       const response = await mockLogin(email, password);
-      
+
       // Save user and token to localStorage
       localStorage.setItem('user', JSON.stringify(response.user));
       localStorage.setItem('token', response.token);
-      
+
       // Set auth token in axios headers
       setAuthToken(response.token);
-      
+
       return response;
     } catch (error) {
       throw error;
     }
   }
-  
+
   // Real API
   try {
     const response = await axiosInstance.post('/auth/login', { email, password });
-    
+
     // Save user and token to localStorage
     localStorage.setItem('user', JSON.stringify(response.data.user));
     localStorage.setItem('token', response.data.token);
-    
+
     // Set auth token in axios headers
     setAuthToken(response.data.token);
-    
+
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Lỗi đăng nhập' };
@@ -74,31 +74,31 @@ export const adminLogin = async (email, password) => {
   if (USE_MOCK_ADMIN_API) {
     try {
       const response = await mockAdminLogin(email, password);
-      
+
       // Save user and token to localStorage
       localStorage.setItem('user', JSON.stringify(response.user));
       localStorage.setItem('token', response.token);
-      
+
       // Set auth token in axios headers
       setAuthToken(response.token);
-      
+
       return response;
     } catch (error) {
       throw error;
     }
   }
-  
+
   // Real API for admin login
   try {
     const response = await axiosInstance.post('/auth/admin/login', { email, password });
-    
+
     // Save user and token to localStorage
     localStorage.setItem('user', JSON.stringify(response.data.user));
     localStorage.setItem('token', response.data.token);
-    
+
     // Set auth token in axios headers
     setAuthToken(response.data.token);
-    
+
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Lỗi đăng nhập admin' };
@@ -119,13 +119,13 @@ export const register = async (userData) => {
       throw error;
     }
   }
-  
+
   // Real API
   try {
     console.log('Calling real register API with:', userData);
     const response = await axiosInstance.post('/auth/register', userData);
     console.log('Real register API response:', response);
-    
+
     // Kiểm tra cấu trúc response
     if (response && response.data) {
       // Nếu response có định dạng .data.data (nhiều API có format như vậy)
@@ -149,7 +149,7 @@ export const register = async (userData) => {
     }
   } catch (error) {
     console.error('Register API error:', error);
-    
+
     // Detailed error logging for debugging
     if (error.response) {
       // Server responded with an error
@@ -157,19 +157,19 @@ export const register = async (userData) => {
         status: error.response.status,
         data: error.response.data
       });
-      
+
       // Trả về thông báo lỗi từ server nếu có
       if (error.response.data && error.response.data.message) {
         throw { message: error.response.data.message };
       }
-      
+
       // Xử lý các mã lỗi thường gặp
       if (error.response.status === 409) {
         throw { message: 'Email hoặc tên người dùng đã tồn tại' };
       } else if (error.response.status === 400) {
         throw { message: 'Dữ liệu đăng ký không hợp lệ' };
       }
-      
+
       throw error.response.data || { message: 'Lỗi đăng ký từ server' };
     } else if (error.request) {
       // Request was made but no response received
@@ -193,7 +193,7 @@ export const createAdminAccount = async (userData) => {
       throw error;
     }
   }
-  
+
   // Real API
   try {
     const response = await axiosInstance.post('/admin/users/create-admin', userData);
@@ -222,10 +222,10 @@ export const getCurrentUser = async () => {
     if (token) {
       setAuthToken(token);
     }
-    
+
     const response = await axiosInstance.get('/auth/me');
     console.log('getCurrentUser API response:', response);
-    
+
     if (response && response.data) {
       return response.data;
     } else {
@@ -253,7 +253,7 @@ export const forgotPassword = async (email) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { message: 'Email đặt lại mật khẩu đã được gửi' };
     }
-    
+
     const response = await axiosInstance.post('/auth/forgot-password', { email });
     return response.data;
   } catch (error) {
@@ -269,7 +269,7 @@ export const resetPassword = async (token, password) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { message: 'Mật khẩu đã được đặt lại thành công' };
     }
-    
+
     const response = await axiosInstance.post(`/auth/reset-password/${token}`, { password });
     return response.data;
   } catch (error) {
@@ -284,10 +284,10 @@ export const exchangeGoogleCode = async (code) => {
     // Nó sẽ nhận code, gửi đến Google để lấy token, lấy thông tin user,
     // sau đó tạo/đăng nhập user trong DB của bạn và trả về token session của bạn.
     const response = await axiosInstance.post('/auth/social/google/exchange', { code });
-    
+
     // Giả sử backend trả về { user, token } giống như các hàm login khác
     if (response.data && response.data.user && response.data.token) {
-      return response.data; 
+      return response.data;
     } else {
       // Nếu backend trả về cấu trúc khác, ví dụ trong response.data.data
       if (response.data && response.data.data && response.data.data.user && response.data.data.token) {
@@ -308,31 +308,31 @@ export const exchangeGoogleCode = async (code) => {
 export const socialLogin = async (data) => {
   try {
     const { provider, authResult } = data;
-    
+
     // Kiểm tra tham số đầu vào
     if (!provider || !authResult) {
       throw new Error('Thiếu thông tin provider hoặc authResult');
     }
-    
+
     // Hiện tại chỉ hỗ trợ facebook qua endpoint này
     if (provider.toLowerCase() !== 'facebook') {
       throw new Error('Provider không được hỗ trợ cho hàm socialLogin này.');
     }
-    
+
     const payload = {
       accessToken: authResult.token, // Thay đổi tên tham số phù hợp với API
       userId: authResult.user?.id,   // Thay đổi tên tham số phù hợp với API
       email: authResult.user?.email,
       name: authResult.user?.name
     };
-    
+
     console.log('Social login request payload:', payload);
-    
+
     // Sử dụng API facebook/token theo như route.js định nghĩa
     const response = await axiosInstance.post('/auth/facebook/token', payload);
-    
+
     console.log('Social login API response:', response);
-    
+
     // Kiểm tra và xử lý nhiều định dạng response có thể có
     if (response.data) {
       // Cấu trúc phổ biến có data.data
@@ -341,7 +341,7 @@ export const socialLogin = async (data) => {
         setAuthToken(response.data.data.token);
         return response.data;
       }
-      
+
       // Cấu trúc với token và user trực tiếp trong data
       if (response.data.token && response.data.user) {
         // Set token in axios headers
@@ -349,7 +349,7 @@ export const socialLogin = async (data) => {
         return response.data;
       }
     }
-    
+
     // Nếu không tìm thấy cấu trúc phù hợp
     console.error('Cấu trúc response không đúng định dạng:', response);
     throw new Error('Dữ liệu đăng nhập qua mạng xã hội không hợp lệ.');
@@ -367,19 +367,25 @@ export const logout = () => {
   // Remove user from storage
   localStorage.removeItem('user');
   localStorage.removeItem('token');
-  
+
   // Clear axios auth header
   setAuthToken(null);
-  
+
   return { success: true };
 };
 
 // Change password
 export const changePassword = async (currentPassword, newPassword) => {
   try {
-    const response = await axiosInstance.post('/auth/change-password', { 
-      currentPassword, 
-      newPassword 
+    // Ensure token is attached
+    const token = localStorage.getItem('token');
+    if (token) {
+      setAuthToken(token);
+    }
+
+    const response = await axiosInstance.post('/auth/change-password', {
+      currentPassword,
+      newPassword
     });
     return response.data;
   } catch (error) {

@@ -1,6 +1,4 @@
-import axios from 'axios'
-
-const API_URL = process.env.REACT_APP_API_URL || '/api'
+import apiClient from '../../../shared/utils/api/apiClient'
 
 /**
  * Service for handling tarot card related API calls
@@ -12,7 +10,7 @@ const tarotService = {
    */
   getCards: async () => {
     try {
-      const response = await axios.get(`${API_URL}/tarot/cards`)
+      const response = await apiClient.get('/tarot/cards')
       return response.data
     } catch (error) {
       console.error('Error fetching tarot cards:', error)
@@ -27,7 +25,7 @@ const tarotService = {
    */
   getCardById: async (id) => {
     try {
-      const response = await axios.get(`${API_URL}/tarot/cards/${id}`)
+      const response = await apiClient.get(`/tarot/cards/${id}`)
       return response.data
     } catch (error) {
       console.error(`Error fetching tarot card with ID ${id}:`, error)
@@ -41,7 +39,7 @@ const tarotService = {
    */
   getSpreads: async () => {
     try {
-      const response = await axios.get(`${API_URL}/tarot/spreads`)
+      const response = await apiClient.get('/tarot/spreads')
       return response.data
     } catch (error) {
       console.error('Error fetching tarot spreads:', error)
@@ -56,7 +54,7 @@ const tarotService = {
    */
   getSpreadById: async (id) => {
     try {
-      const response = await axios.get(`${API_URL}/tarot/spreads/${id}`)
+      const response = await apiClient.get(`/tarot/spreads/${id}`)
       return response.data
     } catch (error) {
       console.error(`Error fetching tarot spread with ID ${id}:`, error)
@@ -73,7 +71,7 @@ const tarotService = {
    */
   generateStandardReading: async (domain, selectedCards, question = '') => {
     try {
-      const response = await axios.post(`${API_URL}/tarot/readings/standard`, {
+      const response = await apiClient.post('/tarot/readings/standard', {
         domain,
         selectedCards,
         question
@@ -94,21 +92,13 @@ const tarotService = {
    */
   generateAIReading: async (domain, selectedCards, question = '') => {
     try {
-      // Lấy token xác thực từ localStorage
-      const token = localStorage.getItem('token');
-      
-      // Chuẩn bị headers với token xác thực
-      const headers = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await axios.post(`${API_URL}/tarot/readings/ai`, {
+      // Token is handled automatically by apiClient interceptor
+      const response = await apiClient.post('/tarot/readings/ai', {
         domain,
         selectedCards,
         question
-      }, { headers });
-      
+      });
+
       return response.data
     } catch (error) {
       console.error('Error generating AI tarot reading:', error)
@@ -123,7 +113,7 @@ const tarotService = {
    */
   saveReading: async (reading) => {
     try {
-      const response = await axios.post(`${API_URL}/tarot/readings/save`, reading)
+      const response = await apiClient.post('/tarot/readings/save', reading)
       return response.data
     } catch (error) {
       console.error('Error saving tarot reading:', error)
@@ -139,7 +129,7 @@ const tarotService = {
    */
   getUserReadings: async (page = 1, limit = 10) => {
     try {
-      const response = await axios.get(`${API_URL}/tarot/readings`, {
+      const response = await apiClient.get('/tarot/readings', {
         params: { page, limit }
       })
       return response.data
@@ -156,7 +146,7 @@ const tarotService = {
    */
   getReadingById: async (readingId) => {
     try {
-      const response = await axios.get(`${API_URL}/tarot/readings/${readingId}`)
+      const response = await apiClient.get(`/tarot/readings/${readingId}`)
       return response.data
     } catch (error) {
       console.error(`Error fetching reading with ID ${readingId}:`, error)
@@ -171,7 +161,7 @@ const tarotService = {
    */
   deleteReading: async (readingId) => {
     try {
-      const response = await axios.delete(`${API_URL}/tarot/readings/${readingId}`)
+      const response = await apiClient.delete(`/tarot/readings/${readingId}`)
       return response.data
     } catch (error) {
       console.error(`Error deleting reading with ID ${readingId}:`, error)
@@ -187,7 +177,7 @@ const tarotService = {
    */
   shareReading: async (readingId, platform) => {
     try {
-      const response = await axios.post(`${API_URL}/tarot/readings/${readingId}/share`, { platform })
+      const response = await apiClient.post(`/tarot/readings/${readingId}/share`, { platform })
       return response.data
     } catch (error) {
       console.error(`Error sharing reading with ID ${readingId}:`, error)
@@ -202,7 +192,7 @@ const tarotService = {
    */
   getShareLink: async (readingId) => {
     try {
-      const response = await axios.get(`${API_URL}/tarot/readings/${readingId}/share-link`)
+      const response = await apiClient.get(`/tarot/readings/${readingId}/share-link`)
       return response.data
     } catch (error) {
       console.error(`Error generating share link for reading with ID ${readingId}:`, error)
@@ -217,7 +207,7 @@ const tarotService = {
    */
   getSharedReading: async (shareToken) => {
     try {
-      const response = await axios.get(`${API_URL}/tarot/shared/${shareToken}`)
+      const response = await apiClient.get(`/tarot/shared/${shareToken}`)
       return response.data
     } catch (error) {
       console.error(`Error fetching shared reading with token ${shareToken}:`, error)

@@ -25,10 +25,10 @@ async function testConnection() {
       password: dbConfig.PASSWORD,
       port: dbConfig.PORT
     });
-    
+
     await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.DB}`);
     await connection.end();
-    
+
     console.log('Kết nối đến database thành công!');
     return true;
   } catch (error) {

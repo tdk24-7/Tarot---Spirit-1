@@ -139,6 +139,7 @@ exports.getReadingById = async (req, res, next) => {
         },
         {
           model: ReadingCard,
+          as: 'cards',
           include: [{
             model: TarotCard,
             attributes: ['id', 'name', 'arcana', 'suit', 'image_url'],

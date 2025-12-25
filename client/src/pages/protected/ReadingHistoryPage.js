@@ -22,9 +22,9 @@ const FilterButton = memo(({ label, active, onClick }) => (
   <button
     onClick={onClick}
     className={`px-4 py-2 rounded-full mr-2 mb-2 text-sm font-medium transition-colors tracking-vn-tight
-    ${active 
-      ? 'bg-gradient-to-r from-[#9370db] to-[#8a2be2] text-white shadow-md' 
-      : 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20'}`}
+    ${active
+        ? 'bg-gradient-to-r from-[#9370db] to-[#8a2be2] text-white shadow-md'
+        : 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20'}`}
   >
     {label}
   </button>
@@ -34,7 +34,7 @@ const ReadingCard = memo(({ id, date, type, cards, result, image, topicName }) =
   <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:bg-white/10">
     <div className="grid grid-cols-1 md:grid-cols-3">
       <div className="h-48 md:h-full overflow-hidden md:col-span-1">
-        <img src={image || `https://api-prod-minimal-v510.vercel.app/assets/images/travel/travel_${(id % 6) + 1}.jpg`} alt={type} className="w-full h-full object-cover" />
+        <img src={image || `https://placehold.co/600x400/2a1045/ffffff?text=Tarot+Reading`} alt={type} className="w-full h-full object-cover" />
       </div>
       <div className="p-6 md:col-span-2">
         <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -45,15 +45,15 @@ const ReadingCard = memo(({ id, date, type, cards, result, image, topicName }) =
             {new Date(date).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })}
           </span>
         </div>
-        
+
         <h3 className="text-xl font-bold mb-3 text-white tracking-vn-tight">{result || 'Kết quả bói bài Tarot'}</h3>
-        
+
         <div className="mb-4">
           <p className="text-gray-300 tracking-vn-tight leading-vn">
             Các lá bài: {cards.join(', ')}
           </p>
         </div>
-        
+
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <span className="w-8 h-8 rounded-full bg-[#2a1045] flex items-center justify-center text-[#9370db]">
@@ -63,9 +63,9 @@ const ReadingCard = memo(({ id, date, type, cards, result, image, topicName }) =
               {topicName || 'Tổng quan'}
             </span>
           </div>
-          
-          <Link 
-            to={`/reading-history/${id}`} 
+
+          <Link
+            to={`/reading-history/${id}`}
             className="bg-white/10 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-white/20 transition-colors tracking-vn-tight"
           >
             Xem chi tiết
@@ -94,45 +94,46 @@ const ReadingHistoryPage = () => {
   const [readings, setReadings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const { isAuthenticated, user } = useSelector(state => state.auth);
-  
+
   // Fetch user readings from API
   useEffect(() => {
     const fetchReadings = async () => {
       try {
         setLoading(true);
         const response = await tarotService.getUserReadings();
-        
+
         if (response && response.data && response.data.readings) {
           // Transform API response to expected format
           const transformedReadings = response.data.readings.map(reading => {
             // Extract card names from reading_cards
-            const cardNames = reading.reading_cards 
-              ? reading.reading_cards.map(rc => rc.tarot_card ? rc.tarot_card.name : 'Unknown Card')
+            // Extract card names from cards
+            const cardNames = reading.cards
+              ? reading.cards.map(card => card.name || 'Unknown Card')
               : [];
-            
+
             // Determine topic name
-            const topicName = reading.tarot_topic ? reading.tarot_topic.name : 'Tổng quan';
-            
+            const topicName = reading.topic || (reading.tarot_topic ? reading.tarot_topic.name : 'Tổng quan');
+
             // Map topic names to categories for filtering
             let category = 'general';
             if (topicName.toLowerCase().includes('tình')) category = 'love';
             if (topicName.toLowerCase().includes('nghiệp')) category = 'career';
             if (topicName.toLowerCase().includes('khỏe')) category = 'health';
             if (reading.spread_id === 1) category = 'daily';
-            
+
             return {
               id: reading.id,
               date: reading.created_at,
-              type: reading.tarot_spread ? reading.tarot_spread.name : 'Trải bài Tarot',
+              type: reading.spread || (reading.tarot_spread ? reading.tarot_spread.name : 'Trải bài Tarot'),
               cards: cardNames,
               result: reading.question || 'Bói Tarot',
               category: category,
               topicName: topicName
             };
           });
-          
+
           setReadings(transformedReadings);
         } else {
           // Fallback to empty array if no readings found
@@ -146,23 +147,23 @@ const ReadingHistoryPage = () => {
         setLoading(false);
       }
     };
-    
+
     if (isAuthenticated) {
       fetchReadings();
     }
   }, [isAuthenticated]);
-  
+
   const filterReadings = () => {
     return readings.filter(reading => {
       // Filter by category
       const categoryMatch = activeFilter === 'all' || reading.category === activeFilter;
-      
+
       // Filter by date range
       let dateMatch = true;
       if (dateRange !== 'all') {
         const readingDate = new Date(reading.date);
         const now = new Date();
-        
+
         if (dateRange === 'week') {
           const weekAgo = new Date();
           weekAgo.setDate(now.getDate() - 7);
@@ -177,19 +178,19 @@ const ReadingHistoryPage = () => {
           dateMatch = readingDate >= yearAgo;
         }
       }
-      
+
       // Filter by search term
-      const searchMatch = searchTerm === '' || 
-                         reading.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         reading.result.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         reading.cards.some(card => card.toLowerCase().includes(searchTerm.toLowerCase()));
-      
+      const searchMatch = searchTerm === '' ||
+        reading.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reading.result.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reading.cards.some(card => card.toLowerCase().includes(searchTerm.toLowerCase()));
+
       return categoryMatch && dateMatch && searchMatch;
     });
   };
-  
+
   const filteredReadings = filterReadings();
-  
+
   const categories = [
     { id: 'all', label: 'Tất cả' },
     { id: 'love', label: 'Tình yêu' },
@@ -197,14 +198,14 @@ const ReadingHistoryPage = () => {
     { id: 'health', label: 'Sức khỏe' },
     { id: 'daily', label: 'Hàng ngày' }
   ];
-  
+
   const dateRanges = [
     { id: 'all', label: 'Tất cả thời gian' },
     { id: 'week', label: '7 ngày qua' },
     { id: 'month', label: '30 ngày qua' },
     { id: 'year', label: '365 ngày qua' }
   ];
-  
+
   // Tính toán thống kê
   const stats = {
     total: readings.length,
@@ -220,19 +221,19 @@ const ReadingHistoryPage = () => {
         <title>Lịch Sử Xem Bói | Bói Tarot</title>
         <meta name="description" content="Xem lại lịch sử các lần xem bói Tarot của bạn, từ tình yêu, sự nghiệp đến sức khỏe." />
       </Helmet>
-      
+
       <MysticBackground />
       <Navbar />
-      
+
       {/* Main Content */}
       <section className="relative pt-32 pb-16 px-4 md:px-8">
         <div className="container mx-auto max-w-6xl relative z-10">
-          <SectionTitle 
-            title="Lịch Sử Xem Bói Tarot" 
+          <SectionTitle
+            title="Lịch Sử Xem Bói Tarot"
             subtitle="Xem lại tất cả những lần bạn đã xem bói trên Bói Tarot"
             centered
           />
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar */}
             <div className="lg:col-span-1 order-2 lg:order-1">
@@ -263,15 +264,15 @@ const ReadingHistoryPage = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Date Filter */}
                 <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-white tracking-vn-tight mb-4">Thời gian</h3>
                   <div className="flex flex-wrap">
                     {dateRanges.map(range => (
-                      <FilterButton 
+                      <FilterButton
                         key={range.id}
-                        label={range.label} 
+                        label={range.label}
                         active={dateRange === range.id}
                         onClick={() => setDateRange(range.id)}
                       />
@@ -280,7 +281,7 @@ const ReadingHistoryPage = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Main Content */}
             <div className="lg:col-span-3 order-1 lg:order-2">
               {/* Filters & Search */}
@@ -290,9 +291,9 @@ const ReadingHistoryPage = () => {
                     <h3 className="text-lg font-semibold text-white mb-2 tracking-vn-tight">Chủ đề</h3>
                     <div className="flex flex-wrap">
                       {categories.map(category => (
-                        <FilterButton 
+                        <FilterButton
                           key={category.id}
-                          label={category.label} 
+                          label={category.label}
                           active={activeFilter === category.id}
                           onClick={() => setActiveFilter(category.id)}
                         />
@@ -302,11 +303,11 @@ const ReadingHistoryPage = () => {
                   <div className="w-full md:w-80">
                     <h3 className="text-lg font-semibold text-white mb-2 tracking-vn-tight">Tìm kiếm</h3>
                     <div className="relative">
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Tìm theo tên bài, kết quả..." 
+                        placeholder="Tìm theo tên bài, kết quả..."
                         className="w-full bg-white/10 border border-purple-900/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#9370db] focus:border-transparent"
                       />
                       <span className="absolute right-3 top-2.5 text-gray-400">
@@ -318,7 +319,7 @@ const ReadingHistoryPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Results */}
               <div className="space-y-6">
                 {loading ? (
@@ -331,7 +332,7 @@ const ReadingHistoryPage = () => {
                   </div>
                 ) : filteredReadings.length > 0 ? (
                   filteredReadings.map(reading => (
-                    <ReadingCard 
+                    <ReadingCard
                       key={reading.id}
                       id={reading.id}
                       date={reading.date}
@@ -349,8 +350,8 @@ const ReadingHistoryPage = () => {
                     </svg>
                     <h3 className="text-xl font-bold text-white tracking-vn-tight mb-2">Chưa có kết quả</h3>
                     <p className="text-gray-400 tracking-vn-tight">
-                      {readings.length > 0 
-                        ? 'Không có kết quả phù hợp với bộ lọc của bạn' 
+                      {readings.length > 0
+                        ? 'Không có kết quả phù hợp với bộ lọc của bạn'
                         : 'Bạn chưa có lịch sử xem bói. Hãy thử xem bói ngay bây giờ!'}
                     </p>
                     {readings.length === 0 && (
@@ -365,7 +366,7 @@ const ReadingHistoryPage = () => {
           </div>
         </div>
       </section>
-      
+
       <Footer />
     </div>
   );

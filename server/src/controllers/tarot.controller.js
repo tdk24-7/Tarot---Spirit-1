@@ -5,6 +5,7 @@ const TarotReadingCard = db.tarotReadingCards;
 const User = db.users;
 const { generateAIResponse } = require('../services/ai.service');
 const TarotTopic = db.tarotTopics;
+const TarotSpread = db.tarotSpreads;
 
 // Lấy tất cả lá bài Tarot
 exports.getAllCards = async (req, res, next) => {
@@ -678,17 +679,22 @@ exports.getUserReadings = async (req, res, next) => {
     // Đếm tổng số kết quả
     const total = await TarotReading.count({ where });
 
+    // Check associations for debugging
+    console.error('DEBUG: TarotReading associations:', Object.keys(db.tarotReadings.associations));
+    console.error('DEBUG: db.tarotReadingCards defined:', !!db.tarotReadingCards);
+
     // Lấy kết quả với phân trang
-    const readings = await TarotReading.findAll({
+    console.error('CRITICAL: Executing getUserReadings with direct DB access'); // LOUD LOG
+    const readings = await db.tarotReadings.findAll({
       where,
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['created_at', 'DESC']],
       include: [{
-        model: TarotReadingCard,
+        model: db.tarotReadingCards,
         as: 'cards',
         include: [{
-          model: TarotCard,
+          model: db.tarotCards,
           as: 'card'
         }]
       }]
@@ -696,13 +702,16 @@ exports.getUserReadings = async (req, res, next) => {
 
     // Định dạng kết quả trả về
     const formattedReadings = readings.map(reading => {
-      const formattedCards = reading.cards.map(rc => ({
-        id: rc.card.id,
-        name: rc.card.name,
-        position: rc.position_in_spread,
-        isReversed: rc.is_reversed,
-        imageUrl: rc.card.imageUrl
-      }));
+      const formattedCards = reading.cards ? reading.cards.map(rc => {
+        if (!rc.card) return null;
+        return {
+          id: rc.card.id,
+          name: rc.card.name,
+          position: rc.position_in_spread,
+          isReversed: rc.is_reversed,
+          imageUrl: rc.card.image_url || rc.card.imageUrl
+        };
+      }).filter(Boolean) : [];
 
       return {
         id: reading.id,
@@ -727,7 +736,13 @@ exports.getUserReadings = async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(error);
+    console.error('Error in getUserReadings:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch readings',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -744,6 +759,14 @@ exports.getReadingById = async (req, res, next) => {
         user_id: userId
       },
       include: [
+        {
+          model: TarotTopic,
+          attributes: ['id', 'name']
+        },
+        {
+          model: TarotSpread,
+          attributes: ['id', 'name']
+        },
         {
           model: TarotReadingCard,
           as: 'cards',
@@ -763,18 +786,21 @@ exports.getReadingById = async (req, res, next) => {
     }
 
     // Định dạng kết quả trả về
-    const formattedCards = reading.cards.map(rc => ({
-      id: rc.card.id,
-      name: rc.card.name,
-      type: rc.card.type,
-      suit: rc.card.suit,
-      number: rc.card.number,
-      position: rc.position_in_spread,
-      isReversed: rc.is_reversed,
-      imageUrl: rc.card.imageUrl,
-      meaning: rc.is_reversed ? rc.card.reversedMeaning : rc.card.normalMeaning,
-      interpretation: rc.interpretation || (rc.is_reversed ? rc.card.reversedMeaning : rc.card.normalMeaning)
-    }));
+    const formattedCards = reading.cards ? reading.cards.map(rc => {
+      if (!rc.card) return null;
+      return {
+        id: rc.card.id,
+        name: rc.card.name,
+        type: rc.card.type,
+        suit: rc.card.suit,
+        number: rc.card.number,
+        position: rc.position_in_spread,
+        isReversed: rc.is_reversed,
+        imageUrl: rc.card.image_url || rc.card.imageUrl,
+        meaning: rc.is_reversed ? rc.card.reversedMeaning : rc.card.normalMeaning,
+        interpretation: rc.interpretation || (rc.is_reversed ? rc.card.reversedMeaning : rc.card.normalMeaning)
+      };
+    }).filter(Boolean) : [];
 
     // Tạo interpretation từ tất cả các lá bài
     let interpretation = "";
@@ -788,6 +814,8 @@ exports.getReadingById = async (req, res, next) => {
       type: reading.type,
       question: reading.question,
       domain: reading.domain,
+      topic: reading.tarot_topic ? reading.tarot_topic.name : 'Tổng quan',
+      spread: reading.tarot_spread ? reading.tarot_spread.name : 'Trải bài Tarot',
       created_at: reading.created_at,
       cards: formattedCards,
       interpretation: interpretation,

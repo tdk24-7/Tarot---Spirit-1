@@ -8,16 +8,27 @@ const { validate } = middleware.validator;
 const { authJwt } = middleware;
 const tarotController = require('../controllers/tarot.controller');
 
-// Get recent readings (public - limited data)
-router.get('/recent', tarotReadingController.getRecentReadings);
+// Public routes - Move to top
+router.get('/cards', tarotController.getAllCards);
+router.get('/cards/:id', tarotController.getCardById);
+router.get('/daily', tarotController.getDailyCard);
+router.post('/random', tarotController.getRandomCards);
 
 // TẠM THỜI BỎ QÁC ROUTE PHÍA DƯỚI ĐÂY - PHÁT TRIỂN CHỈ
 router.use(authenticate);
+
+// Get recent readings (public - limited data)
+router.get('/recent', tarotReadingController.getRecentReadings);
 
 // Get user's readings
 router.get('/my-readings', tarotReadingController.getUserReadings);
 
 // Create a new standard reading
+router.get(
+  '/readings',
+  tarotController.getUserReadings
+);
+
 router.post(
   '/',
   [
@@ -39,12 +50,12 @@ router.post(
     body(['topic_id', 'topicId']).optional().isInt().withMessage('Topic ID must be an integer'),
     body(['spread_id', 'spreadId']).optional().isInt().withMessage('Spread ID must be an integer'),
     body('question').optional().isString().withMessage('Question must be a string'),
-    
+
     // Cho phép cả hai loại format của cards
     body(['selected_cards', 'selectedCards']).optional().isArray().withMessage('Selected cards must be an array'),
     body('selectedIndices').optional().isArray().withMessage('Selected indices must be an array'),
     body('displayedCards').optional().isArray().withMessage('Displayed cards must be an array'),
-    
+
     // Custom validation để đảm bảo ít nhất một trong các format cards được cung cấp
     (req, res, next) => {
       // Kiểm tra xem có ít nhất một trong các format cards không
@@ -55,7 +66,7 @@ router.post(
       ) {
         return next(); // Tiếp tục nếu có ít nhất một format
       }
-      
+
       return res.status(400).json({
         status: 'error',
         message: 'At least one card selection format is required (selected_cards, selectedCards, or selectedIndices+displayedCards)'
@@ -82,17 +93,17 @@ router.get(
   tarotReadingController.getReadingInterpretations
 );
 
-// Routes for admin users
-router.use(restrictTo('admin'));
+// Routes for admin users - Explicit middleware instead of router.use
+// router.use(restrictTo('admin')); // REMOVED GLOBAL BLOCK
 
 // Get all readings (admin only)
-router.get('/', tarotReadingController.getAllReadings);
+router.get('/', [restrictTo('admin')], tarotReadingController.getAllReadings);
 
 // Update a reading (admin only)
-router.put('/:id', tarotReadingController.updateReading);
+router.put('/:id', [restrictTo('admin')], tarotReadingController.updateReading);
 
 // Delete a reading (admin only)
-router.delete('/:id', tarotReadingController.deleteReading);
+router.delete('/:id', [restrictTo('admin')], tarotReadingController.deleteReading);
 
 // Get readings for a user
 router.get(
@@ -100,20 +111,6 @@ router.get(
   [authJwt.verifyToken],
   tarotReadingController.getUserReadings
 );
-
-// Public routes - không cần đăng nhập
-
-// Lấy danh sách lá bài Tarot
-router.get('/cards', tarotController.getAllCards);
-
-// Xem chi tiết một lá bài
-router.get('/cards/:id', tarotController.getCardById);
-
-// Lấy bài Tarot hàng ngày
-router.get('/daily', tarotController.getDailyCard);
-
-// Lấy ngẫu nhiên các lá bài
-router.post('/random', tarotController.getRandomCards);
 
 // Protected routes - cần đăng nhập
 
@@ -131,17 +128,16 @@ router.post(
   tarotController.createReading
 );
 
-// Lấy danh sách lịch sử bói bài
-router.get(
-  '/readings',
-  // Bỏ authJwt.verifyToken,
-  tarotController.getUserReadings
-);
+// Lấy danh sách lịch sử bói bài - MOVED TO TOP to avoid collision with /:id
+// router.get(
+//   '/readings',
+//   tarotController.getUserReadings
+// );
 
 // Xem chi tiết một lần bói
 router.get(
   '/readings/:id',
-  // Bỏ authJwt.verifyToken,
+  // authJwt.verifyToken is optional here if authenticate is used above, but good for explicit safety
   tarotController.getReadingById
 );
 
@@ -166,16 +162,16 @@ router.post(
     body(['topic_id', 'topicId']).optional().isInt().withMessage('Topic ID must be an integer'),
     body(['spread_id', 'spreadId']).optional().isInt().withMessage('Spread ID must be an integer'),
     body('question').notEmpty().withMessage('Question is required for AI reading'),
-    
+
     // Cho phép cả hai loại format của cards
     body(['selected_cards', 'selectedCards']).optional().isArray().withMessage('Selected cards must be an array'),
     body('selectedIndices').optional().isArray().withMessage('Selected indices must be an array'),
     body('displayedCards').optional().isArray().withMessage('Displayed cards must be an array'),
-    
+
     body('type').optional().isString().withMessage('Type must be a string'),
     body('domain').optional().isString(),
     body('useAI').optional().isBoolean(),
-    
+
     // Custom validation để đảm bảo ít nhất một trong các format cards được cung cấp
     (req, res, next) => {
       // Kiểm tra xem có ít nhất một trong các format cards không
@@ -186,7 +182,7 @@ router.post(
       ) {
         return next(); // Tiếp tục nếu có ít nhất một format
       }
-      
+
       return res.status(400).json({
         status: 'error',
         message: 'At least one card selection format is required (selected_cards, selectedCards, or selectedIndices+displayedCards)'
@@ -226,21 +222,21 @@ router.post(
     //   }
     //   next();
     // },
-    
+
     // Cho phép cả hai format API mới và cũ
     body(['topic_id', 'topicId']).optional().isInt().withMessage('Topic ID must be an integer'),
     body(['spread_id', 'spreadId']).optional().isInt().withMessage('Spread ID must be an integer'),
     body('question').notEmpty().withMessage('Question is required for AI reading'),
-    
+
     // Cho phép cả hai loại format của cards
     body(['selected_cards', 'selectedCards']).optional().isArray().withMessage('Selected cards must be an array'),
     body('selectedIndices').optional().isArray().withMessage('Selected indices must be an array'),
     body('displayedCards').optional().isArray().withMessage('Displayed cards must be an array'),
-    
+
     body('type').optional().isString().withMessage('Type must be a string'),
     body('domain').optional().isString(),
     body('useAI').optional().isBoolean(),
-    
+
     // Custom validation để đảm bảo ít nhất một trong các format cards được cung cấp
     (req, res, next) => {
       // Kiểm tra xem có ít nhất một trong các format cards không
@@ -251,7 +247,7 @@ router.post(
       ) {
         return next(); // Tiếp tục nếu có ít nhất một format
       }
-      
+
       return res.status(400).json({
         status: 'error',
         message: 'At least one card selection format is required (selected_cards, selectedCards, or selectedIndices+displayedCards)'

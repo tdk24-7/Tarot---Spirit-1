@@ -9,17 +9,19 @@ import tarotService from '../../features/tarot/services/tarot.service';
 
 // Card component for displaying tarot cards
 const TarotCard = ({ card, isReversed, position, interpretation }) => {
-  const cardImageUrl = card?.image_url || 'https://via.placeholder.com/300x500/1a0933/ffffff?text=Tarot+Card';
-  
+  const cardImageUrl = card?.image_url || card?.imageUrl || 'https://placehold.co/300x500/1a0933/ffffff?text=Tarot+Card';
+  const cardName = card?.name || 'Unknown Card';
   return (
     <div className="flex flex-col items-center">
       <div className="relative mb-4 w-full max-w-[200px] mx-auto">
-        <div className={`relative rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105 ${isReversed ? 'rotate-180' : ''}`}>
-          <img 
-            src={cardImageUrl} 
-            alt={card?.name || 'Tarot Card'} 
-            className="w-full object-cover"
-          />
+        <div className="relative rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105">
+          <div className={`transition-transform duration-500 ${isReversed ? 'rotate-180' : ''}`}>
+            <img
+              src={cardImageUrl}
+              alt={card?.name || 'Tarot Card'}
+              className="w-full object-cover"
+            />
+          </div>
           <div className="absolute bottom-0 left-0 right-0 bg-[#1a0933]/80 backdrop-blur-sm py-2 px-3">
             <p className="text-white text-sm font-medium tracking-vn-tight truncate">{card?.name || 'Tarot Card'}</p>
           </div>
@@ -48,15 +50,15 @@ const ReadingDetailPage = () => {
   const [reading, setReading] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const { isAuthenticated, user } = useSelector(state => state.auth);
-  
+
   useEffect(() => {
     const fetchReadingDetail = async () => {
       try {
         setLoading(true);
         const response = await tarotService.getReadingById(id);
-        
+
         if (response && response.data && response.data.reading) {
           setReading(response.data.reading);
         } else {
@@ -71,14 +73,14 @@ const ReadingDetailPage = () => {
         setLoading(false);
       }
     };
-    
+
     if (isAuthenticated && id) {
       fetchReadingDetail();
     } else if (!isAuthenticated) {
       navigate('/login');
     }
   }, [id, isAuthenticated, navigate]);
-  
+
   // Format the date
   const formatDate = (dateString) => {
     if (!dateString) return 'Không xác định';
@@ -92,7 +94,7 @@ const ReadingDetailPage = () => {
       minute: '2-digit'
     });
   };
-  
+
   // Handle share reading
   const handleShareReading = async () => {
     try {
@@ -106,14 +108,14 @@ const ReadingDetailPage = () => {
       toast.error('Không thể tạo liên kết chia sẻ');
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a0933] to-[#0f051d] text-white relative overflow-hidden">
       <Helmet>
         <title>Chi Tiết Lần Xem Bói | Bói Tarot</title>
         <meta name="description" content="Xem chi tiết kết quả bói bài Tarot với đầy đủ diễn giải và ý nghĩa." />
       </Helmet>
-      
+
       {/* Background decorations */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-20 right-[10%] w-64 h-64 bg-[#9370db]/10 rounded-full filter blur-[80px] animate-pulse-slow"></div>
@@ -122,9 +124,9 @@ const ReadingDetailPage = () => {
         <div className="absolute top-[20%] right-[25%] w-2 h-2 bg-white rounded-full animate-twinkle" style={{ animationDelay: '1s' }}></div>
         <div className="absolute bottom-[30%] right-[40%] w-2 h-2 bg-white rounded-full animate-twinkle" style={{ animationDelay: '2s' }}></div>
       </div>
-      
+
       <Navbar />
-      
+
       <section className="relative pt-32 pb-16 px-4 md:px-8">
         <div className="container mx-auto max-w-6xl relative z-10">
           {/* Breadcrumbs */}
@@ -137,7 +139,7 @@ const ReadingDetailPage = () => {
               <span className="text-white">Chi tiết</span>
             </div>
           </div>
-          
+
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500"></div>
@@ -145,8 +147,8 @@ const ReadingDetailPage = () => {
           ) : error ? (
             <div className="bg-red-500/10 text-red-400 p-6 rounded-lg text-center">
               <p className="text-lg mb-4">{error}</p>
-              <Link 
-                to="/reading-history" 
+              <Link
+                to="/reading-history"
                 className="inline-block px-6 py-2 bg-[#9370db] text-white rounded-lg hover:bg-[#8a2be2] transition-colors"
               >
                 Quay lại lịch sử
@@ -160,7 +162,7 @@ const ReadingDetailPage = () => {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="px-3 py-1 text-xs rounded-full bg-[#9370db]/20 text-[#9370db]">
-                        {reading.tarot_spread?.name || 'Trải bài Tarot'}
+                        {reading.spread || reading.tarot_spread?.name || 'Trải bài Tarot'}
                       </span>
                       <span className="text-gray-400 text-sm">
                         {formatDate(reading.created_at)}
@@ -170,7 +172,7 @@ const ReadingDetailPage = () => {
                       {reading.question || 'Xem bói Tarot'}
                     </h1>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={handleShareReading}
@@ -192,59 +194,59 @@ const ReadingDetailPage = () => {
                     </Link>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4">
                     <h3 className="text-gray-400 text-sm mb-1">Chủ đề</h3>
                     <p className="text-white font-medium">
-                      {reading.tarot_topic?.name || 'Tổng quan'}
+                      {reading.topic || reading.tarot_topic?.name || 'Tổng quan'}
                     </p>
                   </div>
                   <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4">
                     <h3 className="text-gray-400 text-sm mb-1">Loại trải bài</h3>
                     <p className="text-white font-medium">
-                      {reading.tarot_spread?.name || 'Trải bài Tarot'}
+                      {reading.spread || reading.tarot_spread?.name || 'Trải bài Tarot'}
                     </p>
                   </div>
                   <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4">
                     <h3 className="text-gray-400 text-sm mb-1">Số lượng lá bài</h3>
                     <p className="text-white font-medium">
-                      {reading.reading_cards?.length || 0} lá
+                      {reading.cards?.length || 0} lá
                     </p>
                   </div>
                 </div>
               </div>
-              
+
               {/* Cards section */}
               <div className="mb-12">
                 <h2 className="text-2xl font-bold mb-6 text-white tracking-vn-tight">
                   Các lá bài của bạn
                 </h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {reading.reading_cards && reading.reading_cards.map((card, index) => (
+                  {reading.cards && reading.cards.map((card, index) => (
                     <TarotCard
                       key={card.id}
-                      card={card.tarot_card}
-                      isReversed={card.is_reversed}
+                      card={card}
+                      isReversed={card.isReversed}
                       position={index + 1}
                       interpretation={card.interpretation}
                     />
                   ))}
                 </div>
               </div>
-              
+
               {/* Overall interpretation */}
               <div className="bg-white/5 backdrop-blur-sm border border-purple-900/20 rounded-xl p-6 mb-8">
                 <h2 className="text-2xl font-bold mb-4 text-white tracking-vn-tight">
                   Diễn giải tổng thể
                 </h2>
-                
+
                 <div className="prose prose-invert max-w-none">
                   <p className="text-gray-300 leading-relaxed tracking-vn-tight">
                     {/* If there's an AI-generated interpretation, show it here */}
-                    {reading.ai_interpretation || 
-                     `Dựa trên các lá bài xuất hiện trong trải bài của bạn, có thể thấy rằng bạn đang ở một giai đoạn quan trọng trong cuộc sống. 
+                    {reading.combined_interpretation || reading.interpretation ||
+                      `Dựa trên các lá bài xuất hiện trong trải bài của bạn, có thể thấy rằng bạn đang ở một giai đoạn quan trọng trong cuộc sống. 
                      
                      Các lá bài này gợi ý rằng bạn nên tin tưởng vào trực giác của mình và tiếp tục con đường đã chọn. Những thử thách hiện tại chỉ là tạm thời, và với quyết tâm và kiên nhẫn, bạn sẽ vượt qua được chúng.
                      
@@ -252,7 +254,7 @@ const ReadingDetailPage = () => {
                   </p>
                 </div>
               </div>
-              
+
               {/* Additional actions */}
               <div className="flex flex-wrap gap-4 justify-center">
                 <Link
@@ -276,7 +278,7 @@ const ReadingDetailPage = () => {
           )}
         </div>
       </section>
-      
+
       <Footer />
     </div>
   );

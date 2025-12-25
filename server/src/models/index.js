@@ -35,6 +35,7 @@ db.payments = require('./payment.model.js')(sequelize, Sequelize);
 // Tarot card models
 db.tarotCards = require('./tarotCard.model.js')(sequelize, Sequelize);
 db.tarotTopics = require('./tarotTopic.model.js')(sequelize, Sequelize);
+db.tarotSpreads = require('./tarotSpread.model.js')(sequelize, Sequelize);
 db.tarotReadings = require('./tarotReading.model.js')(sequelize, Sequelize);
 db.tarotReadingCards = require('./tarotReadingCard.model.js')(sequelize, Sequelize);
 
@@ -63,10 +64,13 @@ db.tarotReadings.belongsTo(db.users, { foreignKey: 'user_id', onDelete: 'CASCADE
 db.tarotTopics.hasMany(db.tarotReadings, { foreignKey: 'topic_id' });
 db.tarotReadings.belongsTo(db.tarotTopics, { foreignKey: 'topic_id' });
 
-db.tarotReadings.hasMany(db.tarotReadingCards, { foreignKey: 'reading_id' });
+db.tarotSpreads.hasMany(db.tarotReadings, { foreignKey: 'spread_id' });
+db.tarotReadings.belongsTo(db.tarotSpreads, { foreignKey: 'spread_id' });
+
+db.tarotReadings.hasMany(db.tarotReadingCards, { foreignKey: 'reading_id', as: 'cards' });
 db.tarotReadingCards.belongsTo(db.tarotReadings, { foreignKey: 'reading_id' });
 
 db.tarotCards.hasMany(db.tarotReadingCards, { foreignKey: 'card_id' });
-db.tarotReadingCards.belongsTo(db.tarotCards, { foreignKey: 'card_id' });
+db.tarotReadingCards.belongsTo(db.tarotCards, { foreignKey: 'card_id', as: 'card' });
 
 module.exports = db; 
